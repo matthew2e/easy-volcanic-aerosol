@@ -37,7 +37,9 @@ Running
 
 Step 1: build sulfate file
 
-The script eva_build_sulfate_file.f90 reads the eruption history file, and based on the parameter settings in EVAv1_parameter_set_v1.0.nc, builds a timeseries of sulfate mass, saved in file eva_sulfate_timeseries.nc.
+The script eva_build_sulfate_file.f90 reads the eruption history file, and based on the parameter settings in EVAv1_parameter_set_v1.0.nc, builds a timeseries of effective sulfate mass*, saved in file eva_sulfate_timeseries.nc.
+
+* Effective sulfate mass should not necessarily be interpreted as being an accurate estimate of the real mass of sulfate aerosol for eruptions - please see discussion in the EVA paper.
 
 Once compiled, simply run the script:
 
