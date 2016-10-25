@@ -29,7 +29,7 @@ or by first creating a symbolic link to the netcdf.mod file:
 where, in both cases, $(NETCDF) refers to the directory of the netcdf installation on your system.
 Creating executables from the main programs requires linking to the mo_EVA.o module, and the netcdf libraries, e.g.,
 
->> gcc o eva_build_sulfate_file eva_build_sulfate_file.f90 mo_EVA.o -L$(NETCDF)/lib lnetcdf
+>> gcc -o eva_build_sulfate_file eva_build_sulfate_file.f90 mo_EVA.o -L$(NETCDF)/lib lnetcdf
 
 with careful attention to the L and l flags required on your system.
 

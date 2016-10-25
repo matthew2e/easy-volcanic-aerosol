@@ -1,11 +1,11 @@
 !>
 !! @par Copyright
 !!
-!! @brief Program to drive the MACv2-SP module "mo_simple_plumes"
+!! @brief EVA sulfate file builder 
 !!
-!! @author Karsten Peters and Bjorn STevens MPI-M, Hamburg (2015-12-05)
+!! @author Matthew Toohey
 !!
-!! $ID: n/a$
+!! $ID: 
 !!
 !!
 !! @par Copyright
@@ -70,13 +70,11 @@ PROGRAM eva_sulfate_file_builder
 
   CALL sulfate3_timeseries(year,month,ntime,SO4)
 
-  write(*,*) SO4
-
   fyear=year+(month-1)/12.
 
   iret = NF90_NOERR
   iret = iret + nf90_create("./eva_sulfate_timeseries.nc", NF90_CLOBBER, ncid)
-  iret = iret + nf90_def_dim(ncid, 'time'  ,ntime , timeID)
+  iret = iret + nf90_def_dim(ncid, 'time'  ,NF90_UNLIMITED , timeID)  
   iret = iret + nf90_def_dim(ncid, 'plume'   ,nplume , plumeID)
   IF (iret /= 3*NF90_NOERR) STOP 'Error in Creating File Dimensions'
   !

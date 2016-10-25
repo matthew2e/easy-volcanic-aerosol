@@ -119,11 +119,11 @@ PROGRAM eva_forcing_file_builder
   iret = nf90_inq_dimid(ncid, "nwl", VarID)
   iret = nf90_inquire_dimension(ncid, VarID, len = nwl)
 
-  allocate(ext550(ntime,nz,nlat))
-  allocate(ext(ntime,nz,nlat,nwl))
-  allocate(ssa(ntime,nz,nlat,nwl))
-  allocate(asy(ntime,nz,nlat,nwl))
-  allocate(reff(ntime,nz,nlat))
+  allocate(ext550(nz,nlat,ntime))
+  allocate(ext(nz,nlat,nwl,ntime))
+  allocate(ssa(nz,nlat,nwl,ntime))
+  allocate(asy(nz,nlat,nwl,ntime))
+  allocate(reff(nz,nlat,ntime))
   allocate(lambda(nwl))
   allocate(lat(nlat))
   allocate(ext550_vec(nz))
@@ -149,7 +149,7 @@ PROGRAM eva_forcing_file_builder
   iret = nf90_inq_dimid(ncid, "plume", VarID)
   iret = nf90_inquire_dimension(ncid, VarID, len = nplume)
 
-  allocate(SO4(nSO4,nplume))
+  allocate(SO4(nplume,nSO4))
   allocate(SO4_time(nSO4))
 
   iret = nf90_inq_varid(ncid, "time", VarID)
@@ -173,11 +173,11 @@ PROGRAM eva_forcing_file_builder
     do j=1,nlat
       call eva_ext_reff(lat,z,lat(j),so4_in,nlat,nz,ext550_vec,reff_vec)
       call eva_aop_profile(lat,z,lat(j),so4_in,lambda,nwl,nlat,nz,ext_vec,ssa_vec,asy_vec)    
-      ext550(i,:,j)= ext550_vec
-      reff(i,:,j)  = reff_vec
-      ext(i,:,j,:) = ext_vec
-      ssa(i,:,j,:) = ssa_vec
-      asy(i,:,j,:) = asy_vec
+      ext550(:,j,i)= ext550_vec
+      reff(:,j,i)  = reff_vec
+      ext(:,j,:,i) = ext_vec
+      ssa(:,j,:,i) = ssa_vec
+      asy(:,j,:,i) = asy_vec
     end do
   end do
 
@@ -189,7 +189,7 @@ PROGRAM eva_forcing_file_builder
 
     iret = NF90_NOERR
     iret = iret + nf90_create(forcing_file_savename//'_'//yearstr//'.nc', NF90_CLOBBER, ncid)
-    iret = iret + nf90_def_dim(ncid, 'time' ,12    , timeID)
+    iret = iret + nf90_def_dim(ncid, 'time' ,NF90_UNLIMITED    , timeID)
     iret = iret + nf90_def_dim(ncid, 'z'    ,nz    , zID)
     iret = iret + nf90_def_dim(ncid, 'lat'  ,nlat  , latID)
     iret = iret + nf90_def_dim(ncid, 'wl'   ,nwl   , wlID)
@@ -200,11 +200,11 @@ PROGRAM eva_forcing_file_builder
     iret = iret + nf90_def_var(ncid, 'z'      , NF90_FLOAT, zID,     var_z_ID)
     iret = iret + nf90_def_var(ncid, 'lat'    , NF90_FLOAT, latID,   var_lat_ID)
     iret = iret + nf90_def_var(ncid, 'wl'     , NF90_FLOAT, wlID,    var_wl_ID)
-    iret = iret + nf90_def_var(ncid, 'ext'    , NF90_FLOAT, (/timeID,zID,latID,wlID/), var_ext_ID)
+    iret = iret + nf90_def_var(ncid, 'ext'    , NF90_FLOAT, (/zID,latID,wlID,timeID/), var_ext_ID)
     !print *, trim(NF90_STRERROR(iret)) 
-    iret = iret + nf90_def_var(ncid, 'ssa'    , NF90_FLOAT, (/timeID,zID,latID,wlID/), var_ssa_ID)
-    iret = iret + nf90_def_var(ncid, 'asy'    , NF90_FLOAT, (/timeID,zID,latID,wlID/), var_asy_ID)
-    iret = iret + nf90_def_var(ncid, 'reff'   , NF90_FLOAT, (/timeID,zID,latID,wlID/), var_reff_ID)
+    iret = iret + nf90_def_var(ncid, 'ssa'    , NF90_FLOAT, (/zID,latID,wlID,timeID/), var_ssa_ID)
+    iret = iret + nf90_def_var(ncid, 'asy'    , NF90_FLOAT, (/zID,latID,wlID,timeID/), var_asy_ID)
+    iret = iret + nf90_def_var(ncid, 'reff'   , NF90_FLOAT, (/zID,latID,timeID/), var_reff_ID)
     IF (iret /= 9*NF90_NOERR) STOP 'Error in creating file variables'
 
     iret = NF90_NOERR
@@ -232,10 +232,10 @@ PROGRAM eva_forcing_file_builder
     iret = iret + nf90_put_var(ncid, var_z_ID    , values=z)
     iret = iret + nf90_put_var(ncid, var_lat_ID  , values=lat)
     iret = iret + nf90_put_var(ncid, var_wl_ID   , values=lambda)
-    iret = iret + nf90_put_var(ncid, var_ext_ID  , values=ext(ind,:,:,:))
-    iret = iret + nf90_put_var(ncid, var_ssa_ID  , values=ssa(ind,:,:,:))
-    iret = iret + nf90_put_var(ncid, var_asy_ID  , values=asy(ind,:,:,:))
-    iret = iret + nf90_put_var(ncid, var_reff_ID , values=reff(ind,:,:))
+    iret = iret + nf90_put_var(ncid, var_ext_ID  , values=ext(:,:,:,ind))
+    iret = iret + nf90_put_var(ncid, var_ssa_ID  , values=ssa(:,:,:,ind))
+    iret = iret + nf90_put_var(ncid, var_asy_ID  , values=asy(:,:,:,ind))
+    iret = iret + nf90_put_var(ncid, var_reff_ID , values=reff(:,:,ind))
     iret = iret + nf90_close(ncid)
     IF (iret /= 10*NF90_NOERR) STOP 'error writing data or in closing file'
   end do
