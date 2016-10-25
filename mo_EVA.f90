@@ -418,12 +418,12 @@ contains
                   if ( erup_hemi(i) > 0.0 ) then
                      if ( abs(seas_asy - erup_hemi(i)) > 0.1 ) then
                         if ( erup_hemi(i) < 1.0 ) then
-                           do k=0,18
-                              hemi_corr_nh(j+k-1)=(seas_asy/erup_hemi(i))
+                           do k=j,min(j+17,ntime)
+                              hemi_corr_nh(k)=(seas_asy/erup_hemi(i))
                            end do
                         else
-                           do k=0,18
-                              hemi_corr_sh(j+k-1)=erup_hemi(i)/seas_asy
+                           do k=j,min(j+17,ntime)
+                              hemi_corr_sh(k)=(seas_asy/erup_hemi(i))
                            end do
                         end if
                      end if
