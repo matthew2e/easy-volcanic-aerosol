@@ -1,17 +1,11 @@
-!>
-!! @par Copyright
-!!
 !! @brief Program to create volcanic aerosol forcing files with the EVA module 
 !!
-!! @author Matthew Toohey, MPI-M, Hamburg (2016-04-08)
-!!
-!! $ID: n/a$
-!!
+!! @author Matthew Toohey, MPI-M, Hamburg, GEOMAR, Kiel (2016-11-03)
 !!
 !! @par Copyright
 !! 
-!
-PROGRAM eva_forcing_file_builder 
+
+PROGRAM eva_build_forcing_file 
 
   USE mo_eva
   USE netcdf
@@ -87,6 +81,8 @@ PROGRAM eva_forcing_file_builder
        so4_in(3)               ! sulfate triple to use in time loop
 
   ! Define time grid
+
+  write(*,*) 'Building forcing file'
 
   nyear=end_year-start_year+1
   ntime=nyear*12
@@ -181,6 +177,8 @@ PROGRAM eva_forcing_file_builder
     end do
   end do
 
+  write(*,*) 'Writing forcing file'
+  
   ! save data in netcdf file
   do i=1,nyear
     ind=(i-1)*12+(/1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 /)
@@ -240,5 +238,5 @@ PROGRAM eva_forcing_file_builder
     IF (iret /= 10*NF90_NOERR) STOP 'error writing data or in closing file'
   end do
 
-END PROGRAM eva_forcing_file_builder 
+END PROGRAM eva_build_forcing_file 
 

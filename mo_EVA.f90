@@ -105,9 +105,9 @@ contains
       call read_parameter_set
       call read_aero_volc_tables
       call def_vert_centerline(lat,nlat) 
-      write(*,*) 'center line defined'
+      write(*,*) 'Center line defined'
       call eva_shape(lat,z)
-      write(*,*) 'shape defined'
+      write(*,*) 'Shape defined'
       eva_initialized = .TRUE.
 
    end subroutine init_eva
@@ -351,7 +351,7 @@ contains
       hemi_corr_sh=1.0
 
       ! Read eruption list
-      write(*,*) 'reading file: ', eruption_list_filename
+      write(*,*) 'Reading file: ', eruption_list_filename
       iret = nf90_open(eruption_list_filename, NF90_NOWRITE, ncid)
       IF (iret /= NF90_NOERR) STOP 'Error in opening eruption list file'
       iret = nf90_inq_dimid(ncid, "nerup", VarID)
@@ -391,7 +391,7 @@ contains
 
       iret = nf90_close  (ncid)
 
-      write(*,*) erup_ssi
+      !write(*,*) erup_ssi
  
       do i=1,nerup
          IF ( erup_lat(i) < -tropical_edge ) THEN
@@ -499,7 +499,7 @@ contains
  
       end do
       
-      write(*,*) SO4(:,3)
+      !write(*,*) SO4(:,3)
 
       deallocate(erup_ssi)
       deallocate(erup_region)
@@ -603,7 +603,7 @@ contains
       iret = nf90_get_var(ncid, VarID, so4_to_reff)
       IF (iret /= NF90_NOERR) STOP 'Error in reading so4_to_reff'
 
-      write(*,*) tau_loss, tau_prod, so4_to_reff
+      !write(*,*) tau_loss, tau_prod, so4_to_reff
 
    end subroutine read_parameter_set
 

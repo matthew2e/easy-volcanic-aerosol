@@ -1,17 +1,11 @@
-!>
-!! @par Copyright
-!!
 !! @brief EVA sulfate file builder 
 !!
 !! @author Matthew Toohey
 !!
-!! $ID: 
-!!
-!!
 !! @par Copyright
 !! 
-!
-PROGRAM eva_sulfate_file_builder 
+
+PROGRAM eva_build_sulfate_file 
 
   USE mo_eva
   USE netcdf
@@ -51,12 +45,12 @@ PROGRAM eva_sulfate_file_builder
   nyear=end_year-start_year+1
   ntime=nyear*12
 
-  write(*,*) ntime
-
   ALLOCATE(fyear(ntime))
   ALLOCATE(year(ntime))
   ALLOCATE(month(ntime))
   ALLOCATE(SO4(3,ntime))
+
+  write(*,*) 'Building sulfate timeseries' 
 
   i=1
 
@@ -69,6 +63,8 @@ PROGRAM eva_sulfate_file_builder
   end do
 
   CALL sulfate3_timeseries(year,month,ntime,SO4)
+
+  write(*,*) 'Writing sulfate file'
 
   fyear=year+(month-1)/12.
 
@@ -95,5 +91,5 @@ PROGRAM eva_sulfate_file_builder
   IF (iret /= 3*NF90_NOERR) STOP 'error writing data or in closing file'
 
 
-END PROGRAM eva_sulfate_file_builder 
+END PROGRAM eva_build_sulfate_file 
 
