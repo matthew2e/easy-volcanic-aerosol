@@ -41,6 +41,9 @@ PROGRAM eva_build_sulfate_file
        fyear(:)            , &
        SO4(:,:)              !
 
+  character(8)  :: date
+  character(10) :: time
+
   nplume = 3
   nyear=end_year-start_year+1
   ntime=nyear*12
@@ -51,6 +54,11 @@ PROGRAM eva_build_sulfate_file
   ALLOCATE(SO4(3,ntime))
 
   write(*,*) 'Building sulfate timeseries' 
+
+!   call date_and_time(date,time,zone,values)
+   call date_and_time(DATE=date,TIME=time)
+!   call date_and_time(TIME=time)
+
 
   i=1
 
@@ -73,6 +81,12 @@ PROGRAM eva_build_sulfate_file
   iret = iret + nf90_def_dim(ncid, 'time'  ,NF90_UNLIMITED , timeID)  
   iret = iret + nf90_def_dim(ncid, 'plume'   ,nplume , plumeID)
   IF (iret /= 3*NF90_NOERR) STOP 'Error in Creating File Dimensions'
+
+  iret = NF90_NOERR
+  iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"title","EVA v1.0: timeseries of effective sulfate mass in three regions")
+  iret = iret + nf90_put_att(ncid,NF90_GLOBAL,'history','Created on '//date(7:8)//'.'//date(5:6)//'.'//date(1:4)//' at '//time(1:2)//':'//time(3:4)//':'//time(5:6))
+  IF (iret /= 2*NF90_NOERR) STOP 'Error in Creating File Attributes'
+
   !
   iret = NF90_NOERR
   iret = iret + nf90_def_var(ncid, 'time'         , NF90_FLOAT, timeID, var_t_ID)

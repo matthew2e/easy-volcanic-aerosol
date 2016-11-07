@@ -80,9 +80,12 @@ PROGRAM eva_build_forcing_file
        z(46)               , & ! height grid for EVA calculations
        so4_in(3)               ! sulfate triple to use in time loop
 
+  character(8)  :: date
+  character(10) :: time
+
   ! Define time grid
 
-  write(*,*) 'Building forcing file'
+  write(*,*) 'Building forcing'
 
   nyear=end_year-start_year+1
   ntime=nyear*12
@@ -177,7 +180,9 @@ PROGRAM eva_build_forcing_file
     end do
   end do
 
-  write(*,*) 'Writing forcing file'
+  write(*,*) 'Writing forcing files'
+ 
+  call date_and_time(DATE=date,TIME=time)
   
   ! save data in netcdf file
   do i=1,nyear
@@ -193,6 +198,11 @@ PROGRAM eva_build_forcing_file
     iret = iret + nf90_def_dim(ncid, 'wl'   ,nwl   , wlID)
     IF (iret /= 6*NF90_NOERR) STOP 'Error in Creating File Dimensions'
     !
+    iret = NF90_NOERR
+    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"title","EVA v1.0: stratospheric aerosol optical properties")
+    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,'history','Created on '//date(7:8)//'.'//date(5:6)//'.'//date(1:4)//' at '//time(1:2)//':'//time(3:4)//':'//time(5:6))
+    IF (iret /= 2*NF90_NOERR) STOP 'Error in Creating File Attributes'
+
     iret = NF90_NOERR
     iret = iret + nf90_def_var(ncid, 'time'   , NF90_FLOAT, timeID,  var_t_ID)
     iret = iret + nf90_def_var(ncid, 'z'      , NF90_FLOAT, zID,     var_z_ID)
