@@ -168,7 +168,7 @@ PROGRAM eva_build_forcing_file
 
   ! for each timestep
   do i=1,ntime
-    so4_in=SO4(SO4_i0+i-1,:)
+    so4_in=SO4(:,SO4_i0+i-1)
     do j=1,nlat
       call eva_ext_reff(lat,z,lat(j),so4_in,nlat,nz,ext550_vec,reff_vec)
       call eva_aop_profile(lat,z,lat(j),so4_in,lambda,nwl,nlat,nz,ext_vec,ssa_vec,asy_vec)    

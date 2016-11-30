@@ -318,18 +318,19 @@ contains
    subroutine sulfate3_timeseries(year,month,n,SO4)
 
    ! input/output
-      real, intent(out), dimension(n,3) :: SO4
+      real, intent(out), dimension(3,n) :: SO4
       real, intent(in), dimension(n) :: year, month
       integer, intent(in) :: n
       ! local variables
       integer :: ntime, i, j, k
 
-      real, dimension(n,3) :: SO2_in, SO2, SO4_new
+      real, dimension(3,n) :: SO2_in, SO2, SO4_new
       real, dimension(:), allocatable :: erup_ssi, erup_lat, erup_hemi
       real :: C, tau_loss_EQ_use, tau_loss_ET_use, SO4_tot
       real, dimension(n) :: hemi_corr_nh, hemi_corr_sh
       integer, dimension(:), allocatable :: erup_region, erup_year, erup_month, erup_day
       real :: SHmix, NHmix, SHtrans, NHtrans, seas_asy
+      real :: S_tot_t0, SO2_tot_t0, SO4_tot_t0, SO4_ET2EQ_ratio_t0
 
    INTEGER ::          &
        iret         , & !< netCDF reading return variable
@@ -342,13 +343,28 @@ contains
       ntime=size(year)
       
       SO2_in=0
-      SO2_in(:,1)=background_SO2_in/12.0/2.0
-      SO2_in(:,3)=background_SO2_in/12.0/2.0
+      SO2_in(1,:)=background_SO2_in/12.0/2.0
+      SO2_in(3,:)=background_SO2_in/12.0/2.0
       SO2=0
       SO4=0
       SO4_new=0
       hemi_corr_nh=1.0
       hemi_corr_sh=1.0
+
+      ! initialize SO4 based on background SO2_in (no spin-up needed)
+      ! (this is very close to being right, SO4 still dips every so slighlty in
+      ! first months)
+      S_tot_t0=background_SO2_in/12.0*tau_loss
+      SO4_tot_t0 = S_tot_t0/(1.0+tau_prod/tau_loss)
+      SO2_tot_t0 = S_tot_t0/(1.0+tau_loss/tau_prod)
+      SO4_ET2EQ_ratio_t0 = ((tau_mix*tau_res/2.0) + tau_mix*tau_loss + tau_loss*tau_res) / (tau_loss*tau_res)
+      SO4(2,1)=SO4_tot_t0 / ( 2.0*SO4_ET2EQ_ratio_t0 + 1.0)
+      SO4(1,1)=SO4_tot_t0 / ( 2.0 + 1.0/SO4_ET2EQ_ratio_t0)
+      SO4(3,1)=SO4_tot_t0 / ( 2.0 + 1.0/SO4_ET2EQ_ratio_t0)
+      SO2(2,1)=SO2_tot_t0 /  ( 2.0*SO4_ET2EQ_ratio_t0 + 1.0)
+      SO2(1,1)=SO2_tot_t0 / ( 2.0 + 1.0/SO4_ET2EQ_ratio_t0) 
+      SO2(3,1)=SO2_tot_t0 / ( 2.0 + 1.0/SO4_ET2EQ_ratio_t0)
+
 
       ! Read eruption list
       write(*,*) 'Reading file: ', eruption_list_filename
@@ -412,7 +428,7 @@ contains
             do j=1,ntime
                if (year(j) .eq. erup_year(i) .and. month(j) .eq. erup_month(i)) then
                   ! set SO2_in for this date = elist_SO2
-                  SO2_in(j,erup_region(i))=SO2_in(j,erup_region(i)) + erup_ssi(i)
+                  SO2_in(erup_region(i),j)=SO2_in(erup_region(i),j) + erup_ssi(i)
                   seas_asy=0.4*seasonal_amp*cos(2.0*pi*(month(j)+4.0)/12.0)+1 ! a rough approximation of what the 
                                                                  ! seasonal paramterized transport produces
                   if ( erup_hemi(i) > 0.0 ) then
@@ -435,21 +451,20 @@ contains
    
       ! Run box-model calculations to produce SO4 timeseries
      
-      SO2(1,:)=SO2_in(1,:)
+      !SO2(:,1)=SO2_in(:,1)
 
       ! SO2 is converted into SO4
       do i=2,ntime
-         SO2(i,1)=SO2(i-1,1)*exp(-1/tau_prod)*exp(-1/tau_loss) +SO2_in(i,1)
-         SO2(i,2)=SO2(i-1,2)*exp(-1/tau_prod)*exp(-1/tau_loss) +SO2_in(i,2)
-         SO2(i,3)=SO2(i-1,3)*exp(-1/tau_prod)*exp(-1/tau_loss) +SO2_in(i,3)
-         SO4_new(i,1)=SO2(i-1,1)*(1-exp(-1/tau_prod))
-         SO4_new(i,2)=SO2(i-1,2)*(1-exp(-1/tau_prod))
-         SO4_new(i,3)=SO2(i-1,3)*(1-exp(-1/tau_prod))
+         SO2(1,i)=SO2(1,i-1)*exp(-1/tau_prod)*exp(-1/tau_loss) +SO2_in(1,i)
+         SO2(2,i)=SO2(2,i-1)*exp(-1/tau_prod)*exp(-1/tau_loss) +SO2_in(2,i)
+         SO2(3,i)=SO2(3,i-1)*exp(-1/tau_prod)*exp(-1/tau_loss) +SO2_in(3,i)
+         SO4_new(1,i)=SO2(1,i-1)*(1-exp(-1/tau_prod))
+         SO4_new(2,i)=SO2(2,i-1)*(1-exp(-1/tau_prod))
+         SO4_new(3,i)=SO2(3,i-1)*(1-exp(-1/tau_prod))
       end do
 
       ! SO4 grows and mixes
 
-      SO4(1,:)=0.0
       do i=2,ntime
          ! compute mixing and transport timescales with seasonal
          ! variability. Seasonality modeled as cosine, with maxima in
@@ -464,7 +479,7 @@ contains
          ! simulations of large eruptions. But eventually this should be
          ! replace, the loss rate would be better related to Reff, this
          ! requires merging the sulfate and Reff growth routines
-         SO4_tot=sum(SO4(i-1,:))
+         SO4_tot=sum(SO4(:,i-1))
          if (SO4_tot > 10) then
             tau_loss_EQ_use=((tau_loss-6.0)/0.3679)*exp(-SO4_tot/10.0)+6.0
             tau_loss_ET_use=((tau_loss-6.0)/0.3679)*exp(-SO4_tot/10.0)+6.0
@@ -474,27 +489,27 @@ contains
          end if
 
 
-         SO4(i,2) = (SO4(i-1,2)+SO4_new(i,2))*exp(-1/tau_loss_EQ_use) &
+         SO4(2,i) = (SO4(2,i-1)+SO4_new(2,i))*exp(-1/tau_loss_EQ_use) &
                           ! add production and subtract STE loss
-                  - (SO4(i-1,2) - SO4(i-1,3))*SHmix &
+                  - (SO4(2,i-1) - SO4(3,i-1))*SHmix &
                            ! subtract loss by mixing to SH
-                  - (SO4(i-1,2)- SO4(i-1,1))*NHmix &
+                  - (SO4(2,i-1)- SO4(1,i-1))*NHmix &
                            ! subtract loss by mixing to NH
-                   - SO4(i-1,2)*NHtrans - SO4(i-1,2)*SHtrans
+                   - SO4(2,i-1)*NHtrans - SO4(2,i-1)*SHtrans
                            ! subtract loss by residual circ to both hemispheres
 
-         SO4(i,1) = (SO4(i-1,1)+SO4_new(i,1))*exp(-1/tau_loss_ET_use) &
+         SO4(1,i) = (SO4(1,i-1)+SO4_new(1,i))*exp(-1/tau_loss_ET_use) &
                            ! add production and subtract STE loss
-                  + (SO4(i-1,2) - SO4(i-1,1))*SHmix &
+                  + (SO4(2,i-1) - SO4(1,i-1))*SHmix &
                            ! add mixing from EQ
-                   + SO4(i-1,2)*SHtrans
+                   + SO4(2,i-1)*SHtrans
                            ! add residual circ from EQ
 
-         SO4(i,3) = (SO4(i-1,3)+SO4_new(i,3))*exp(-1/tau_loss_ET_use) &
+         SO4(3,i) = (SO4(3,i-1)+SO4_new(3,i))*exp(-1/tau_loss_ET_use) &
                            ! add production and subtract STE loss
-                  + (SO4(i-1,2) - SO4(i-1,3))*NHmix &
+                  + (SO4(2,i-1) - SO4(3,i-1))*NHmix &
                            ! add mixing from EQ
-                   + SO4(i-1,2)*NHtrans
+                   + SO4(2,i-1)*NHtrans
                            ! add residual circ from EQ
  
       end do
