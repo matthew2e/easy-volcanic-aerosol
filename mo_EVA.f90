@@ -435,11 +435,11 @@ contains
                      if ( abs(seas_asy - erup_hemi(i)) > 0.1 ) then
                         if ( erup_hemi(i) < 1.0 ) then
                            do k=j,min(j+17,ntime)
-                              hemi_corr_nh(k)=(seas_asy/erup_hemi(i))
+                              hemi_corr_nh(k)=(seas_asy/max(erup_hemi(i),0.1667)) !  correction unstable for erup_hemi>6
                            end do
                         else
                            do k=j,min(j+17,ntime)
-                              hemi_corr_sh(k)=(seas_asy/erup_hemi(i))
+                              hemi_corr_sh(k)=(seas_asy/min(erup_hemi(i),6.0))
                            end do
                         end if
                      end if
