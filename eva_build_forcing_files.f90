@@ -19,7 +19,7 @@ PROGRAM eva_build_forcing_file
   CHARACTER(len=*), PARAMETER :: grid_filename         = "eva_gridfile_echam_T63_sw.nc"
   CHARACTER(len=*), PARAMETER :: sulfate_filename      = "eva_sulfate_timeseries.nc"
   CHARACTER(len=*), PARAMETER :: forcing_file_savename = "eva_forcing_echam_T63_sw"
-  CHARACTER(len=4) :: yearstr
+  CHARACTER(len=5) :: yearstr
 
   INTEGER, PARAMETER :: nmon = 12
 
@@ -54,7 +54,8 @@ PROGRAM eva_build_forcing_file
        iyear        , & ! an index
        imonth       , & ! 
        i            , & ! an index
-       j                ! another index
+       j            , & ! another index
+       y                ! one more
 
   !LOGICAL :: save_yearly = .true.   ! Set to false to save all data in one file         
 
@@ -90,21 +91,22 @@ PROGRAM eva_build_forcing_file
   nyear=end_year-start_year+1
   ntime=nyear*12
 
-  ALLOCATE(fyear(ntime))
-  ALLOCATE(year(ntime))
-  ALLOCATE(month(ntime))
+  ALLOCATE(fyear(12))
+  ALLOCATE(year(nyear))
+  !ALLOCATE(month(ntime))
+
 
   i=1
 
   do iyear=1,nyear
-    do imonth=1,nmon
+    !do imonth=1,nmon
       year(i)  = start_year+iyear-1
-      month(i) = mons(imonth)
+    !  month(i) = mons(imonth)
       i=i+1
-    end do
+    !end do
   end do
 
-  fyear=year+(month-1)/12.
+  !fyear=year+(month-1)/12.
 
   ! Define EVA height grid
   z = (/ (i, i = 5, 50, 1) /)
@@ -118,11 +120,11 @@ PROGRAM eva_build_forcing_file
   iret = nf90_inq_dimid(ncid, "nwl", VarID)
   iret = nf90_inquire_dimension(ncid, VarID, len = nwl)
 
-  allocate(ext550(nz,nlat,ntime))
-  allocate(ext(nz,nlat,nwl,ntime))
-  allocate(ssa(nz,nlat,nwl,ntime))
-  allocate(asy(nz,nlat,nwl,ntime))
-  allocate(reff(nz,nlat,ntime))
+  allocate(ext550(nz,nlat,12))
+  allocate(ext(nz,nlat,nwl,12))
+  allocate(ssa(nz,nlat,nwl,12))
+  allocate(asy(nz,nlat,nwl,12))
+  allocate(reff(nz,nlat,12))
   allocate(lambda(nwl))
   allocate(lat(nlat))
   allocate(ext550_vec(nz))
@@ -159,39 +161,44 @@ PROGRAM eva_build_forcing_file
   iret = nf90_get_var(ncid, VarID, SO4(:,:)  , start=(/1,1/) ,count=(/nplume,nSO4/))
   IF (iret /= NF90_NOERR) STOP 'Error in reading sulfate file'
 
-  ! find index on SO4_time for t0
+  do y=1,nyear
 
-  SO4_i0=1 
-  do while ( SO4_time(SO4_i0) < fyear(1) )
-    SO4_i0 = SO4_i0 + 1
-  end do
+     ! find index on SO4_time for t0
 
-  ! for each timestep
-  do i=1,ntime
-    so4_in=SO4(:,SO4_i0+i-1)
-    do j=1,nlat
-      call eva_ext_reff(lat,z,lat(j),so4_in,nlat,nz,ext550_vec,reff_vec)
-      call eva_aop_profile(lat,z,lat(j),so4_in,lambda,nwl,nlat,nz,ext_vec,ssa_vec,asy_vec)    
-      ext550(:,j,i)= ext550_vec
-      reff(:,j,i)  = reff_vec
-      ext(:,j,:,i) = ext_vec
-      ssa(:,j,:,i) = ssa_vec
-      asy(:,j,:,i) = asy_vec
-    end do
-  end do
+     SO4_i0=1
+     do while ( SO4_time(SO4_i0) < year(y) )
+       SO4_i0 = SO4_i0 + 1
+     end do
 
-  write(*,*) 'Writing forcing files'
+     ! for each timestep
+     do i=1,12
+       so4_in=SO4(:,SO4_i0+i-1)
+       do j=1,nlat
+         call eva_ext_reff(lat,z,lat(j),so4_in,nlat,nz,ext550_vec,reff_vec)
+         call eva_aop_profile(lat,z,lat(j),so4_in,lambda,nwl,nlat,nz,ext_vec,ssa_vec,asy_vec)
+         ext550(:,j,i)= ext550_vec
+         reff(:,j,i)  = reff_vec
+         ext(:,j,:,i) = ext_vec
+         ssa(:,j,:,i) = ssa_vec
+         asy(:,j,:,i) = asy_vec
+       end do
+     end do
+
+     !write(*,*) 'Writing forcing files'
  
-  call date_and_time(DATE=date,TIME=time)
+     call date_and_time(DATE=date,TIME=time)
   
-  ! save data in netcdf file
-  do i=1,nyear
-    ind=(i-1)*12+(/1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 /)
-    this_year=year(1+(i-1)*12)
-    write ( yearstr , '(i4)' ) this_year
+     ! save data in netcdf file
+    !do i=1,nyear
+    !ind=y*12+(/1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 /)
+
+    !this_year=year(1+(i-1)*12)
+    this_year=year(y)
+    fyear=this_year+(mons-1)/12.0
+    write ( yearstr , '(SP, i5.4)' ) this_year
 
     iret = NF90_NOERR
-    iret = iret + nf90_create(forcing_file_savename//'_'//yearstr//'.nc', NF90_CLOBBER, ncid)
+    iret = iret + nf90_create(forcing_file_savename//'_'//trim(yearstr)//'.nc', NF90_CLOBBER, ncid)
     iret = iret + nf90_def_dim(ncid, 'time' ,NF90_UNLIMITED    , timeID)
     iret = iret + nf90_def_dim(ncid, 'z'    ,nz    , zID)
     iret = iret + nf90_def_dim(ncid, 'lat'  ,nlat  , latID)
@@ -236,14 +243,14 @@ PROGRAM eva_build_forcing_file
     IF (iret /= 18*NF90_NOERR) STOP 'Error in creating file variable attributes'
     !
     iret = NF90_NOERR  
-    iret = iret + nf90_put_var(ncid, var_t_ID    , values=fyear(ind))
+    iret = iret + nf90_put_var(ncid, var_t_ID    , values=fyear)
     iret = iret + nf90_put_var(ncid, var_z_ID    , values=z)
     iret = iret + nf90_put_var(ncid, var_lat_ID  , values=lat)
     iret = iret + nf90_put_var(ncid, var_wl_ID   , values=lambda)
-    iret = iret + nf90_put_var(ncid, var_ext_ID  , values=ext(:,:,:,ind))
-    iret = iret + nf90_put_var(ncid, var_ssa_ID  , values=ssa(:,:,:,ind))
-    iret = iret + nf90_put_var(ncid, var_asy_ID  , values=asy(:,:,:,ind))
-    iret = iret + nf90_put_var(ncid, var_reff_ID , values=reff(:,:,ind))
+    iret = iret + nf90_put_var(ncid, var_ext_ID  , values=ext)
+    iret = iret + nf90_put_var(ncid, var_ssa_ID  , values=ssa)
+    iret = iret + nf90_put_var(ncid, var_asy_ID  , values=asy)
+    iret = iret + nf90_put_var(ncid, var_reff_ID , values=reff)
     iret = iret + nf90_close(ncid)
     IF (iret /= 10*NF90_NOERR) STOP 'error writing data or in closing file'
   end do

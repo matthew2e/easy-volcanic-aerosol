@@ -25,7 +25,7 @@ PROGRAM eva_build_aod_file
   CHARACTER(len=*), PARAMETER :: grid_filename         = "eva_gridfile_echam_T63_sw.nc"
   CHARACTER(len=*), PARAMETER :: sulfate_filename      = "eva_sulfate_timeseries.nc"
   CHARACTER(len=*), PARAMETER :: forcing_file_savename = "eva_aod_echam_T63_sw"
-  CHARACTER(len=4) :: start_yearstr, end_yearstr
+  CHARACTER(len=5) :: start_yearstr, end_yearstr
 
   INTEGER, PARAMETER :: nmon = 12
 
@@ -157,8 +157,8 @@ PROGRAM eva_build_aod_file
 
   ! save data in netcdf file
 
-  write ( start_yearstr , '(i4)' ) start_year
-  write ( end_yearstr , '(i4)' ) end_year
+  write ( start_yearstr , '(i0)' ) start_year
+  write ( end_yearstr , '(i0)' ) end_year
 
   write(*,*) end_yearstr, trim(end_yearstr)
 
