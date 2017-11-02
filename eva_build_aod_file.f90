@@ -18,14 +18,15 @@ PROGRAM eva_build_aod_file
 
   IMPLICIT NONE
 
-  INTEGER, PARAMETER :: &
-       start_year = 1990, &
-       end_year   = 1995
+  INTEGER :: &
+       aod_start_year = 1990, &
+       aod_end_year   = 1995
 
-  CHARACTER(len=*), PARAMETER :: grid_filename         = "eva_gridfile_echam_T63_sw.nc"
-  CHARACTER(len=*), PARAMETER :: sulfate_filename      = "eva_sulfate_timeseries.nc"
-  CHARACTER(len=*), PARAMETER :: forcing_file_savename = "eva_aod_echam_T63_sw"
-  CHARACTER(len=5) :: start_yearstr, end_yearstr
+  CHARACTER(len=50) :: grid_filename         = "eva_gridfile_echam_T63_sw.nc"
+  CHARACTER(len=50) :: sulfate_filename      = "eva_sulfate_timeseries.nc"
+  CHARACTER(len=50) :: aod_output_dir        = "."
+  CHARACTER(len=50) :: aod_file_savename     = "eva_aod_echam_T63_sw"
+  CHARACTER(len=5)  :: start_yearstr, end_yearstr
 
   INTEGER, PARAMETER :: nmon = 12
 
@@ -76,10 +77,15 @@ PROGRAM eva_build_aod_file
   character(8)  :: date
   character(10) :: time
 
+  ! Input parameters from namelist
+  NAMELIST /AOD_OUTPUT_FILES/ aod_output_dir, aod_file_savename, grid_filename, aod_start_year, aod_end_year
+  OPEN (UNIT=30, FILE='eva_namelist', STATUS='OLD')
+  READ (30, NML=AOD_OUTPUT_FILES)
+  CLOSE (30)
 
   ! Define time grid
 
-  nyear=end_year-start_year+1
+  nyear=aod_end_year-aod_start_year+1
   ntime=nyear*12
 
   ALLOCATE(fyear(ntime))
@@ -90,7 +96,7 @@ PROGRAM eva_build_aod_file
 
   do iyear=1,nyear
     do imonth=1,nmon
-      year(i)  = start_year+iyear-1
+      year(i)  = aod_start_year+iyear-1
       month(i) = mons(imonth)
       i=i+1
     end do
@@ -103,7 +109,7 @@ PROGRAM eva_build_aod_file
   nz = size(z)
 
   ! Read grid file for lat and wavelengths
-  iret = nf90_open(grid_filename, NF90_NOWRITE, ncid)
+  iret = nf90_open(TRIM(grid_filename), NF90_NOWRITE, ncid)
   IF (iret /= NF90_NOERR) STOP 'Error in opening grid file'
   iret = nf90_inq_dimid(ncid, "lat", VarID)
   iret = nf90_inquire_dimension(ncid, VarID, len = nlat)
@@ -120,7 +126,7 @@ PROGRAM eva_build_aod_file
 
   ! Input sulfate data
 
-  iret = nf90_open(sulfate_filename, NF90_NOWRITE, ncid)
+  iret = nf90_open(TRIM(sulfate_filename), NF90_NOWRITE, ncid)
   IF (iret /= NF90_NOERR) STOP 'Error in opening sulfate file'
   iret = nf90_inq_dimid(ncid, "time", VarID)
   iret = nf90_inquire_dimension(ncid, VarID, len = nSO4)
@@ -157,8 +163,8 @@ PROGRAM eva_build_aod_file
 
   ! save data in netcdf file
 
-  write ( start_yearstr , '(i0)' ) start_year
-  write ( end_yearstr , '(i0)' ) end_year
+  write ( start_yearstr , '(i0)' ) aod_start_year
+  write ( end_yearstr , '(i0)' ) aod_end_year
 
   write(*,*) end_yearstr, trim(end_yearstr)
 
@@ -168,7 +174,7 @@ PROGRAM eva_build_aod_file
   call date_and_time(DATE=date,TIME=time)
 
   iret = NF90_NOERR
-  iret = iret + nf90_create(forcing_file_savename//'_'//trim(start_yearstr)//'_'//trim(end_yearstr)//'.nc', NF90_CLOBBER, ncid)
+  iret = iret + nf90_create(TRIM(aod_output_dir)//'/'//TRIM(aod_file_savename)//'_'//trim(start_yearstr)//'_'//trim(end_yearstr)//'.nc', NF90_CLOBBER, ncid)
   iret = iret + nf90_def_dim(ncid, 'time' ,NF90_UNLIMITED    , timeID)
   iret = iret + nf90_def_dim(ncid, 'lat'  ,nlat  , latID)
   IF (iret /= 4*NF90_NOERR) STOP 'Error in Creating File Dimensions'

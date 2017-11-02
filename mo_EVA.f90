@@ -29,9 +29,9 @@ module mo_EVA
    !----------------------------------------------------------------------------------------
    ! Input files
 
-   CHARACTER(len=*), PARAMETER :: eruption_list_filename = "Eruption_list_GMD_1960_2015.nc"
-   CHARACTER(len=*), PARAMETER :: parameter_set_filename = "EVAv1_parameter_set_v1.0.nc"
-   CHARACTER(len=*), PARAMETER :: Lookuptable_filename   = "eva_Mie_lookuptables.nc"
+   CHARACTER(len=50)    :: eruption_list_filename = 'Eruption_list_GMD_1960_2015.nc'
+   CHARACTER(len=50)    :: parameter_set_filename = 'EVAv1_parameter_set_v1.1.nc'
+   CHARACTER(len=50)    :: Lookuptable_filename   = 'eva_Mie_lookuptables.nc'
 
    ! --------------------------------------------------------------------------------------
    ! Sulfate box model parameters
@@ -88,6 +88,9 @@ module mo_EVA
        nlut_reff,                           &  ! number of effective radii in lut
        nlut_wl                                 ! number of wavelengths in lut 
 
+   ! NAMELISTS
+   NAMELIST /EVA_INPUT/ eruption_list_filename, parameter_set_filename, Lookuptable_filename
+
    ! ------------------------------------------------------------------------------------------
    ! PROGRAM control parameters
 
@@ -105,6 +108,11 @@ contains
       call read_parameter_set
       call read_aero_volc_tables
       call def_vert_centerline(lat,nlat) 
+
+      OPEN (UNIT=10, FILE='eva_namelist', STATUS='OLD')
+      READ (10, NML=EVA_INPUT)
+      CLOSE (10)
+
       write(*,*) 'Center line defined'
       call eva_shape(lat,z)
       write(*,*) 'Shape defined'
@@ -229,7 +237,7 @@ contains
 
       allocate(cline(nlat))
 
-      iret = nf90_open(parameter_set_filename, NF90_NOWRITE, ncid)
+      iret = nf90_open(TRIM(parameter_set_filename), NF90_NOWRITE, ncid)
       IF (iret /= NF90_NOERR) STOP 'Error in opening parameter file'
 
       iret = nf90_inq_varid(ncid, "cline_lat", VarID)
@@ -367,8 +375,8 @@ contains
 
 
       ! Read eruption list
-      write(*,*) 'Reading file: ', eruption_list_filename
-      iret = nf90_open(eruption_list_filename, NF90_NOWRITE, ncid)
+      write(*,*) 'Reading file: ', TRIM(eruption_list_filename)
+      iret = nf90_open(TRIM(eruption_list_filename), NF90_NOWRITE, ncid)
       IF (iret /= NF90_NOERR) STOP 'Error in opening eruption list file'
       iret = nf90_inq_dimid(ncid, "nerup", VarID)
       iret = nf90_inquire_dimension(ncid, VarID, len = nerup)
@@ -562,9 +570,9 @@ contains
          ncid         , & !< netCDF file ID
          VarID            !< pointer to generic dimension in netCDF file
 
-    write(*,*) 'Reading parameter set: ', parameter_set_filename     
+    write(*,*) 'Reading parameter set: ', TRIM(parameter_set_filename)     
  
-      iret = nf90_open(parameter_set_filename, NF90_NOWRITE, ncid)
+      iret = nf90_open(TRIM(parameter_set_filename), NF90_NOWRITE, ncid)
       IF (iret /= NF90_NOERR) STOP 'Error in opening parameter file'
       iret = nf90_inq_varid(ncid, "version", VarID)
 
@@ -645,10 +653,10 @@ contains
          VarID        , & !< pointer to generic dimension in netCDF file
          nreff        , & !< length of effective radius vector in lookuptable
          nwl          
-      write(*,*) 'Reading look up table:', Lookuptable_filename
+      write(*,*) 'Reading look up table:', TRIM(Lookuptable_filename)
       ! read in the lookup tables
       !
-      iret = nf90_open(Lookuptable_filename, NF90_NOWRITE, ncid)
+      iret = nf90_open(TRIM(Lookuptable_filename), NF90_NOWRITE, ncid)
       IF (iret /= NF90_NOERR) STOP 'Error in opening lookup tables file'
       iret = nf90_inq_dimid(ncid, "reff", VarID)
       iret = nf90_inquire_dimension(ncid, VarID, len = nreff)

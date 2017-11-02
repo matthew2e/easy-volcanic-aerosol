@@ -12,14 +12,15 @@ PROGRAM eva_build_forcing_file
 
   IMPLICIT NONE
 
-  INTEGER, PARAMETER :: &
-       start_year = 1990, &
-       end_year   = 1995
+  INTEGER :: &
+       forcing_start_year = 1990, &
+       forcing_end_year   = 1995
 
-  CHARACTER(len=*), PARAMETER :: grid_filename         = "eva_gridfile_echam_T63_sw.nc"
-  CHARACTER(len=*), PARAMETER :: sulfate_filename      = "eva_sulfate_timeseries.nc"
-  CHARACTER(len=*), PARAMETER :: forcing_file_savename = "eva_forcing_echam_T63_sw"
-  CHARACTER(len=5) :: yearstr
+  CHARACTER(len=50) :: grid_filename         = "eva_gridfile_echam_T63_sw.nc"
+  CHARACTER(len=50) :: sulfate_filename      = "eva_sulfate_timeseries.nc"
+  CHARACTER(len=50) :: forcing_output_dir    = "."
+  CHARACTER(len=50) :: forcing_file_savename = "eva_forcing_echam_T63_sw"
+  CHARACTER(len=5)  :: yearstr
 
   INTEGER, PARAMETER :: nmon = 12
 
@@ -84,11 +85,17 @@ PROGRAM eva_build_forcing_file
   character(8)  :: date
   character(10) :: time
 
+  ! Input parameters from namelist
+  NAMELIST /FORCING_OUTPUT_FILES/ forcing_output_dir, forcing_file_savename, grid_filename, forcing_start_year, forcing_end_year
+  OPEN (UNIT=30, FILE='eva_namelist', STATUS='OLD')
+  READ (30, NML=FORCING_OUTPUT_FILES)
+  CLOSE (30)
+
   ! Define time grid
 
   write(*,*) 'Building forcing'
 
-  nyear=end_year-start_year+1
+  nyear=forcing_end_year-forcing_start_year+1
   ntime=nyear*12
 
   ALLOCATE(fyear(12))
@@ -100,7 +107,7 @@ PROGRAM eva_build_forcing_file
 
   do iyear=1,nyear
     !do imonth=1,nmon
-      year(i)  = start_year+iyear-1
+      year(i)  = forcing_start_year+iyear-1
     !  month(i) = mons(imonth)
       i=i+1
     !end do
@@ -113,7 +120,7 @@ PROGRAM eva_build_forcing_file
   nz = size(z)
 
   ! Read grid file for lat and wavelengths
-  iret = nf90_open(grid_filename, NF90_NOWRITE, ncid)
+  iret = nf90_open(TRIM(grid_filename), NF90_NOWRITE, ncid)
   IF (iret /= NF90_NOERR) STOP 'Error in opening grid file'
   iret = nf90_inq_dimid(ncid, "lat", VarID)
   iret = nf90_inquire_dimension(ncid, VarID, len = nlat)
@@ -143,7 +150,7 @@ PROGRAM eva_build_forcing_file
 
   ! Input sulfate data
 
-  iret = nf90_open(sulfate_filename, NF90_NOWRITE, ncid)
+  iret = nf90_open(TRIM(sulfate_filename), NF90_NOWRITE, ncid)
   IF (iret /= NF90_NOERR) STOP 'Error in opening sulfate file'
   iret = nf90_inq_dimid(ncid, "time", VarID)
   iret = nf90_inquire_dimension(ncid, VarID, len = nSO4)
@@ -198,7 +205,7 @@ PROGRAM eva_build_forcing_file
     write ( yearstr , '(SP, i5.4)' ) this_year
 
     iret = NF90_NOERR
-    iret = iret + nf90_create(forcing_file_savename//'_'//trim(yearstr)//'.nc', NF90_CLOBBER, ncid)
+    iret = iret + nf90_create(TRIM(forcing_output_dir)//'/'//TRIM(forcing_file_savename)//'_'//trim(yearstr)//'.nc', NF90_CLOBBER, ncid)
     iret = iret + nf90_def_dim(ncid, 'time' ,NF90_UNLIMITED    , timeID)
     iret = iret + nf90_def_dim(ncid, 'z'    ,nz    , zID)
     iret = iret + nf90_def_dim(ncid, 'lat'  ,nlat  , latID)

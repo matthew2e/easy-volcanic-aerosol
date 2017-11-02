@@ -12,9 +12,9 @@ PROGRAM eva_build_sulfate_file
 
   IMPLICIT NONE
 
-  INTEGER, PARAMETER :: &
-       start_year = 1960, &
-       end_year   = 2015
+  INTEGER :: &
+       sulfate_start_year = 1960, &
+       sulfate_end_year   = 2015
 
   INTEGER, PARAMETER :: nmon = 12
 
@@ -44,8 +44,13 @@ PROGRAM eva_build_sulfate_file
   character(8)  :: date
   character(10) :: time
 
+  NAMELIST /SULFATE_INPUT/  sulfate_start_year, sulfate_end_year
+  OPEN (UNIT=30, FILE='eva_namelist', STATUS='OLD')
+  READ (30, NML=SULFATE_INPUT)
+  CLOSE (30)
+
   nplume = 3
-  nyear=end_year-start_year+1
+  nyear=sulfate_end_year-sulfate_start_year+1
   ntime=nyear*12
 
   ALLOCATE(fyear(ntime))
@@ -64,7 +69,7 @@ PROGRAM eva_build_sulfate_file
 
   do iyear=1,nyear
     do imonth=1,nmon
-      year(i)  = start_year+iyear-1
+      year(i)  = sulfate_start_year+iyear-1
       month(i) = mons(imonth)
       i=i+1
     end do
