@@ -156,6 +156,62 @@ contains
 
    end subroutine eva_ext_reff
 
+   subroutine eva_aod(lat,lat0,SO4,wl,nlat,nw,nz,aod)
+      ! To do, get the AOD at lat0 given SO4 amount
+      ! first get aod550, then convert aod using look up table
+      real, intent(in), dimension(nlat) :: lat
+      real, intent(in) :: lat0
+      real, intent(in) :: SO4(3)
+      real, intent(in) :: wl(nw)
+      integer, intent(in) :: nlat, nw, nz
+      real, intent(out), dimension(nw) :: aod
+      ! local variables
+      real :: aod550, reff(nz)
+
+      call get_aod550(lat,lat0,SO4,nlat,aod550)
+      call get_reff(SO4,lat,lat0,nlat,nz,reff)
+      call convert_aod_interp(aod550,reff(1),wl,nw,aod)
+
+   end subroutine eva_aod
+
+   subroutine get_aod550(lat,lat0,SO4,nlat,aod550)
+
+     ! get aod550 at given latitude lat0
+
+     real, intent(in), dimension(nlat) :: lat
+     real, intent(in) :: lat0
+     real, intent(in) :: SO4(3)
+     integer, intent(in) :: nlat
+     real, intent(out) :: aod550
+
+     ! local variables
+     integer :: lat0_ind, i
+     real :: sulfate_aerosol_mass(3)
+     real :: SO4_lat
+
+     nonlin_threshold = (so4_to_aod_nonlin/so4_to_aod_linear)**(3.)
+
+     !write(*,*) z
+      ! find index of lat0 in lat
+      do i=1,nlat
+         if ( lat(i) .eq. lat0 ) then
+            lat0_ind=i
+          end if
+      end do
+
+      SO4_lat = h_shape_EQ(lat0_ind)*SO4(2) &
+                      + h_shape_SH(lat0_ind)*SO4(1) &
+                      + h_shape_NH(lat0_ind)*SO4(3)
+
+      if ( SO4_lat < nonlin_threshold ) then
+         aod550=so4_to_aod_linear*SO4_lat
+      else
+         aod550=so4_to_aod_nonlin*(SO4_lat**(2.0/3.0))
+      end if
+
+   end subroutine get_aod550 
+
+
    subroutine get_ext550(lat,z,lat0,SO4,nlat,nz,ext550)
 
      ! get extinction profile at a given latitude lat0
@@ -170,11 +226,12 @@ contains
      ! local variables
      integer :: lat0_ind, i
      real :: sulfate_aerosol_mass(3)
-     real :: aod, SO4_lat
+     real :: aod, SO4_lat, v_integral
      real :: v_shape(nz), v_shape_norm(nz)
 
      nonlin_threshold = (so4_to_aod_nonlin/so4_to_aod_linear)**(3.)
 
+     !write(*,*) z
       ! find index of lat0 in lat
       do i=1,nlat
          if ( lat(i) .eq. lat0 ) then
@@ -195,10 +252,18 @@ contains
       v_shape=shape_EQ(lat0_ind,:)*SO4(2) &
                       + shape_SH(lat0_ind,:)*SO4(1) &
                       + shape_NH(lat0_ind,:)*SO4(3)
-      if ( sum(v_shape) > 0 ) then
-         v_shape_norm=v_shape/sum(v_shape)
+      
+      ! normalize, needed for transition zones?
+      v_integral=0
+      do i=1,nz-1      
+        v_integral=v_integral + 0.5*(v_shape(i)+v_shape(i+1))*(z(i+1)-z(i))
+      end do
+      if ( sum(v_shape) > 0 ) then 
+         !v_shape_norm=v_shape/sum(v_shape*(z(2)-z(1)))
+         v_shape_norm=v_shape/v_integral
       else
          v_shape_norm=0
+         write(*,*) "normalization <0"
       end if
 
       ext550=aod*v_shape_norm
@@ -261,8 +326,8 @@ contains
 
       ! local variables
       real, dimension(:), allocatable :: sinlat
-      real :: h_sin_center_ET, h_sin_width_ET, h_sin_width_EQ
-      integer :: nlat, nz, i
+      real :: h_sin_center_ET, h_sin_width_ET, h_sin_width_EQ, v_integral
+      integer :: nlat, nz, i, j
 
       real, dimension(:,:), allocatable :: v_shape_EQ, v_shape_ET
 
@@ -309,9 +374,18 @@ contains
                                   /(v_width_EQ*sqrt(2.*pi))
 
          ! normalize (assuming equally spaced z)
-         v_shape_ET(i,:)=v_shape_ET(i,:)/sum(v_shape_ET(i,:)*(z(2)-z(1)))
-         v_shape_EQ(i,:)=v_shape_EQ(i,:)/sum(v_shape_EQ(i,:)*(z(2)-z(1)))
-
+         v_integral=0
+         do j=1,nz-1
+           v_integral=v_integral + 0.5*(v_shape_ET(i,j)+v_shape_ET(i,j+1))*(z(j+1)-z(j))
+         end do
+         !v_shape_ET(i,:)=v_shape_ET(i,:)/sum(v_shape_ET(i,:)*(z(2)-z(1)))
+         v_shape_ET(i,:)=v_shape_ET(i,:)/v_integral
+         v_integral=0
+         do j=1,nz-1
+           v_integral=v_integral + 0.5*(v_shape_EQ(i,j)+v_shape_EQ(i,j+1))*(z(j+1)-z(j))
+         end do
+         !v_shape_EQ(i,:)=v_shape_EQ(i,:)/sum(v_shape_EQ(i,:)*(z(2)-z(1)))
+         v_shape_EQ(i,:)=v_shape_EQ(i,:)/v_integral
          ! include horizontal shape
          shape_EQ(i,:)=v_shape_EQ(i,:)*h_shape_EQ(i)
          shape_NH(i,:)=v_shape_ET(i,:)*h_shape_NH(i)
@@ -715,6 +789,26 @@ contains
 
    end subroutine convert_aero_props_interp 
 
+   subroutine convert_aod_interp(aod550, reff, wl, nw, aod)
+      ! Conversion of ext550 and Reff to ext(wl), ssa(wl) and asy(wl)
+      ! based on interpolation in wavelength to look up table values
+      ! To do: we will replace the look up tables for this option with
+      !  something more useful for other models, i.e., higher res
+
+      real, intent(in) :: aod550, reff, wl(nw)
+      integer, intent(in) :: nw 
+      real, intent(out) :: aod(nw)
+      integer :: j
+
+      ! For each wavelength, find aod by bilinear
+      ! interpolation
+      !write(*,*) lut_extrat
+      do j=1,nw
+         aod(j) = aod550 * interp2(lut_reff, lut_lambda, lut_extrat, reff, wl(j), nlut_reff, nlut_wl)
+      end do
+
+   end subroutine convert_aod_interp
+
    function interp(xin, yin, xout, n)
       ! simple routine to linearly interpolate
       ! xin should be monotonically increasing
@@ -722,11 +816,19 @@ contains
       ! For now, for xout values outside the range of xin, 
       !  the function returns the "nearest neighbour" 
 
-      real :: xin(n), yin(n)
+      real :: xin(n), yin(n), xin_rev(n), yin_rev(n)
       integer :: n
       real :: interp, xout, slope
       integer :: i
 
+      !if (xin(2).gt.xin(1)) then
+      !   do i=1,n
+      !     xin_rev(n-i+1)=xin(i)
+      !     yin_rev(n-i+1)=yin(i)
+      !   end do
+      !   xin=xin_rev
+      !   yin=yin_rev
+      !end if
       i=1
       if (xout < xin(1)) then
          interp=yin(1)
@@ -737,7 +839,7 @@ contains
          interp=yin(n)
          return
       end if
-
+!
       do while (xin(i) < xout)
          i=i+1
       end do
@@ -755,9 +857,27 @@ contains
    ! For now, for xout,yout values outside the range of xin, yin u
    !  the function returns 0 
 
-      real, intent(in) :: xin(nx), yin(ny), zin(nx,ny), xout, yout
+      real :: xin(nx), yin(ny), zin(nx,ny), xout, yout
       real :: interp2, z_x_y1, z_x_y2
       integer :: i, j, nx, ny
+      real :: xin_rev(nx), yin_rev(ny),zin_rev(nx,ny)
+
+      !if (xin(2).gt.xin(1)) then
+      !   do i=1,nx
+      !      xin_rev(nx-i+1) = xin(i)
+      !      zin_rev(nx-i+1,:) = zin(i,:)
+      !   end do
+      !   xin=xin_rev
+      !   zin=zin_rev
+      !end if
+      !if (yin(2).gt.yin(1)) then
+      !   do i=1,ny
+      !      yin_rev(ny-i+1) = yin(i)
+      !      zin_rev(:,ny-i+1) = zin(:,i)
+      !   end do
+      !   yin=yin_rev
+      !   zin=zin_rev
+      !end if
 
       if (xout < xin(1)) then
          interp2=0
