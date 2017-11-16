@@ -421,6 +421,9 @@ contains
        nerup        
 
       call read_parameter_set
+      OPEN (UNIT=10, FILE='eva_namelist', STATUS='OLD')
+      READ (10, NML=EVA_INPUT)
+      CLOSE (10)
 
       ntime=size(year)
       
