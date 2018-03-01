@@ -29,7 +29,7 @@ module mo_EVA
    !----------------------------------------------------------------------------------------
    ! Input files
 
-   CHARACTER(len=50)    :: eruption_list_filename = 'Eruption_list_GMD_1960_2015.nc'
+   CHARACTER(len=100)    :: eruption_list_filename = 'Eruption_list_GMD_1960_2015.nc'
    CHARACTER(len=50)    :: parameter_set_filename = 'EVAv1_parameter_set_v1.1.nc'
    CHARACTER(len=50)    :: Lookuptable_filename   = 'eva_Mie_lookuptables.nc'
 
@@ -109,7 +109,7 @@ contains
       call read_aero_volc_tables
       call def_vert_centerline(lat,nlat) 
 
-      OPEN (UNIT=10, FILE='eva_namelist', STATUS='OLD')
+      OPEN (UNIT=10, FILE='eva_namelist_holo', STATUS='OLD')
       READ (10, NML=EVA_INPUT)
       CLOSE (10)
 
@@ -252,7 +252,6 @@ contains
       v_shape=shape_EQ(lat0_ind,:)*SO4(2) &
                       + shape_SH(lat0_ind,:)*SO4(1) &
                       + shape_NH(lat0_ind,:)*SO4(3)
-      
       ! normalize, needed for transition zones?
       v_integral=0
       do i=1,nz-1      
@@ -421,7 +420,7 @@ contains
        nerup        
 
       call read_parameter_set
-      OPEN (UNIT=10, FILE='eva_namelist', STATUS='OLD')
+      OPEN (UNIT=10, FILE='eva_namelist_holo', STATUS='OLD')
       READ (10, NML=EVA_INPUT)
       CLOSE (10)
 
@@ -779,14 +778,19 @@ contains
       integer, intent(in) :: nw, nz
       real, intent(out) :: ext(nz,nw), ssa(nz,nw), asy(nz,nw)
       integer :: i, j
+      real :: reff_limit
+      real :: reff_to_use(nz)
+
+      reff_limit=1.3
+      reff_to_use=min(reff,reff_limit)
 
       ! For each height and wavelength, find ext, ssa and asym by bilinear interpolation
       !write(*,*) lut_extrat
       do i=1,nz
          do j=1,nw
-            ext(i,j) = ext550(i) * interp2(lut_reff, lut_lambda, lut_extrat, reff(i), wl(j), nlut_reff, nlut_wl) 
-            ssa(i,j) = interp2(lut_reff, lut_lambda, lut_ssa, reff(i), wl(j), nlut_reff, nlut_wl) 
-            asy(i,j) = interp2(lut_reff, lut_lambda, lut_asy, reff(i), wl(j), nlut_reff, nlut_wl) 
+            ext(i,j) = ext550(i) * interp2(lut_reff, lut_lambda, lut_extrat, reff_to_use(i), wl(j), nlut_reff, nlut_wl) 
+            ssa(i,j) = interp2(lut_reff, lut_lambda, lut_ssa, reff_to_use(i), wl(j), nlut_reff, nlut_wl) 
+            asy(i,j) = interp2(lut_reff, lut_lambda, lut_asy, reff_to_use(i), wl(j), nlut_reff, nlut_wl) 
          end do
       end do
 
@@ -802,12 +806,16 @@ contains
       integer, intent(in) :: nw 
       real, intent(out) :: aod(nw)
       integer :: j
+      real :: reff_limit
+      real :: reff_to_use
 
+      reff_limit=1.3
+      reff_to_use=min(reff,reff_limit)
       ! For each wavelength, find aod by bilinear
       ! interpolation
       !write(*,*) lut_extrat
       do j=1,nw
-         aod(j) = aod550 * interp2(lut_reff, lut_lambda, lut_extrat, reff, wl(j), nlut_reff, nlut_wl)
+         aod(j) = aod550 * interp2(lut_reff, lut_lambda, lut_extrat, reff_to_use, wl(j), nlut_reff, nlut_wl)
       end do
 
    end subroutine convert_aod_interp
