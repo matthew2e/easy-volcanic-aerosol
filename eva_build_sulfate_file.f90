@@ -45,7 +45,7 @@ PROGRAM eva_build_sulfate_file
   character(10) :: time
 
   NAMELIST /SULFATE_INPUT/  sulfate_start_year, sulfate_end_year
-  OPEN (UNIT=30, FILE='eva_namelist', STATUS='OLD')
+  OPEN (UNIT=30, FILE='eva_namelist_holo', STATUS='OLD')
   READ (30, NML=SULFATE_INPUT)
   CLOSE (30)
 
