@@ -79,7 +79,7 @@ PROGRAM eva_build_aod_file
 
   ! Input parameters from namelist
   NAMELIST /AOD_OUTPUT_FILES/ aod_output_dir, aod_file_savename, grid_filename, aod_start_year, aod_end_year
-  OPEN (UNIT=30, FILE='eva_namelist', STATUS='OLD')
+  OPEN (UNIT=30, FILE='eva_namelist_holo', STATUS='OLD')
   READ (30, NML=AOD_OUTPUT_FILES)
   CLOSE (30)
 
