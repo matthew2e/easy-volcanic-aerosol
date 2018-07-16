@@ -105,13 +105,17 @@ contains
       integer, intent(in) :: nlat, nz 
       write(*,*) 'Initializing EVA'
 
-      call read_parameter_set
-      call read_aero_volc_tables
-      call def_vert_centerline(lat,nlat) 
+!      call read_parameter_set
+!      call read_aero_volc_tables
+!      call def_vert_centerline(lat,nlat) 
 
-      OPEN (UNIT=10, FILE='eva_namelist_holo', STATUS='OLD')
+      OPEN (UNIT=10, FILE='eva_namelist', STATUS='OLD')
       READ (10, NML=EVA_INPUT)
       CLOSE (10)
+
+      call read_parameter_set
+      call read_aero_volc_tables
+      call def_vert_centerline(lat,nlat)
 
       write(*,*) 'Center line defined'
       call eva_shape(lat,z)
@@ -419,10 +423,13 @@ contains
        VarID        , & !< pointer to generic dimension in netCDF file
        nerup        
 
-      call read_parameter_set
-      OPEN (UNIT=10, FILE='eva_namelist_holo', STATUS='OLD')
+!      call read_parameter_set
+      OPEN (UNIT=10, FILE='eva_namelist', STATUS='OLD')
       READ (10, NML=EVA_INPUT)
       CLOSE (10)
+
+      call read_parameter_set
+
 
       ntime=size(year)
       
