@@ -64,13 +64,14 @@ PROGRAM eva_build_forcing_file_on_levels
        SO4_i0       , & ! index of time in SO4 file corresponding to first time of forcing file
        ind(12)      , & ! indices referencing years in full timeseries
        this_year    , & ! a single year, used in num2str 
-       days_since_111(12) , & ! for CF compiant time variable
+!       days_since_111(12) , & ! for CF compiant time variable
        iyear        , & ! an index
        imonth       , & ! 
        i            , & ! an index
        j            , & ! another index
        y                ! one more
 
+  INTEGER*4 :: days_since_111(12)
   !LOGICAL :: save_yearly = .true.   ! Set to false to save all data in one file         
 
   REAL, ALLOCATABLE ::       &
@@ -110,7 +111,7 @@ PROGRAM eva_build_forcing_file_on_levels
   INTEGER :: z_option = 3       ! 1=standard 1km grid, 2=0.5 km grid, 3=read from grid file, 4=self defined vector
   character(8)  :: date
   character(10) :: time
-  LOGICAL :: signed_year_ouput=.false.  ! signed years useful when extending into BCE
+  LOGICAL :: signed_year_ouput=.true.  ! signed years useful when extending into BCE
   real :: add_to_year_output=0       ! Sometimes used to avoid negative years in filename (set=7000 for Holo)
 
   ! Input parameters from namelist
