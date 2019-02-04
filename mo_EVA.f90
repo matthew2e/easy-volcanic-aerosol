@@ -410,10 +410,10 @@ contains
       integer :: ntime, i, j, k
 
       real, dimension(3,n) :: SO2_in, SO2, SO4_new
-      real, dimension(:), allocatable :: erup_ssi, erup_lat, erup_hemi, erup_dur
+      real, dimension(:), allocatable :: erup_ssi, erup_lat, erup_hemi
       real :: C, tau_loss_EQ_use, tau_loss_ET_use, SO4_tot
       real, dimension(n) :: hemi_corr_nh, hemi_corr_sh
-      integer, dimension(:), allocatable :: erup_region, erup_year, erup_month, erup_day
+      integer, dimension(:), allocatable :: erup_dur, erup_region, erup_year, erup_month, erup_day
       real :: SHmix, NHmix, SHtrans, NHtrans, seas_asy
       real :: S_tot_t0, SO2_tot_t0, SO4_tot_t0, SO4_ET2EQ_ratio_t0
 
@@ -530,7 +530,7 @@ contains
                if (year(j) .eq. erup_year(i) .and. month(j) .eq. erup_month(i)) then
                   ! set SO2_in for this date = elist_SO2
                   if (erup_dur(i) .gt. 0) then
-                     SO2_in(erup_region(i),j:j+erup_dur(i))=SO2_in(erup_region(i),j:j+erup_dur(i)) + erup_ssi(i)/erup_dur(i)
+                     SO2_in(erup_region(i),j:j+erup_dur(i))=SO2_in(erup_region(i),j:j+erup_dur(i)) + erup_ssi(i)/REAL(erup_dur(i))
                   else
                      SO2_in(erup_region(i),j)=SO2_in(erup_region(i),j) + erup_ssi(i)
                   end if
