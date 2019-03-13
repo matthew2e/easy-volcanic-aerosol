@@ -55,6 +55,7 @@ PROGRAM eva_build_forcing_file_on_levels
        var_wlup_ID  , & ! pointer to wavelenth variable in netCDF file
        var_wnlo_ID  , & ! pointer to wavelenth variable in netCDF file
        var_wnup_ID  , & ! pointer to wavelenth variable in netCDF file
+       var_dy_ID    , & ! pointer to decimal year variable in netCDF file
        var_ext_ID   , & ! pointer to extinction variable in netCDF file
        var_ssa_ID   , & ! pointer to SSA variable in netCDF file
        var_asy_ID   , & ! pointer to ASY variable in netCDF file
@@ -63,12 +64,14 @@ PROGRAM eva_build_forcing_file_on_levels
        SO4_i0       , & ! index of time in SO4 file corresponding to first time of forcing file
        ind(12)      , & ! indices referencing years in full timeseries
        this_year    , & ! a single year, used in num2str 
+!       days_since_111(12) , & ! for CF compiant time variable
        iyear        , & ! an index
        imonth       , & ! 
        i            , & ! an index
        j            , & ! another index
        y                ! one more
 
+  INTEGER*4 :: days_since_111(12)
   !LOGICAL :: save_yearly = .true.   ! Set to false to save all data in one file         
 
   REAL, ALLOCATABLE ::       &
@@ -104,10 +107,12 @@ PROGRAM eva_build_forcing_file_on_levels
        z(:,:)                  ! height grid for EVA calculations
   REAL ::                    &
        !z(46)               , & ! height grid for EVA calculations
-       so4_in(3)               ! sulfate triple to use in time loop
-  INTEGER :: z_option = 3  ! 1=standard 1km grid, 2=0.5 km grid, 3=read from grid file, 4=self defined vector
+       so4_in(3)                ! sulfate triple to use in time loop
+  INTEGER :: z_option = 3       ! 1=standard 1km grid, 2=0.5 km grid, 3=read from grid file, 4=self defined vector
   character(8)  :: date
   character(10) :: time
+  LOGICAL :: signed_year_ouput=.true.  ! signed years useful when extending into BCE
+  real :: add_to_year_output=0       ! Sometimes used to avoid negative years in filename (set=7000 for Holo)
 
   ! Input parameters from namelist
   NAMELIST /FORCING_OUTPUT_FILES/ forcing_output_dir, forcing_file_savename, grid_filename, forcing_start_year, forcing_end_year
@@ -321,8 +326,13 @@ PROGRAM eva_build_forcing_file_on_levels
     !this_year=year(1+(i-1)*12)
     this_year=year(y)
     fyear=this_year+(mons-1)/12.0
-    !write ( yearstr , '(SP, i5.4)' ) this_year
-    write ( yearstr, '( i4.4)' ) this_year
+    days_since_111=15+(mons-1)*30+(this_year-1)*360
+    this_year=this_year+add_to_year_output
+    if (signed_year_ouput) then
+       write ( yearstr , '(SP, i5.4)' ) this_year
+    else
+       write ( yearstr, '( i4.4)' ) this_year
+    end if
 
     iret = NF90_NOERR
     write(*,*) TRIM(forcing_output_dir)//'/'//TRIM(forcing_file_savename)//'_'//trim(yearstr)//'.nc'
@@ -341,6 +351,7 @@ PROGRAM eva_build_forcing_file_on_levels
 
     iret = NF90_NOERR
     iret = iret + nf90_def_var(ncid, 'time'   , NF90_FLOAT, timeID,                     var_t_ID)
+    iret = iret + nf90_def_var(ncid, 'dec_year',NF90_FLOAT, timeID,                     var_dy_ID)
     iret = iret + nf90_def_var(ncid, 'ilev'   , NF90_FLOAT, ilID,                       var_il_ID)
     iret = iret + nf90_def_var(ncid, 'mlev'   , NF90_FLOAT, mlID,                       var_ml_ID)
     iret = iret + nf90_def_var(ncid, 'z'      , NF90_FLOAT, (/mlID,latID/),             var_z_ID)
@@ -358,11 +369,14 @@ PROGRAM eva_build_forcing_file_on_levels
     iret = iret + nf90_def_var(ncid, 'reff'   , NF90_FLOAT, (/latID,mlID,timeID/),      var_reff_ID)
     iret = iret + nf90_def_var(ncid, 'aod'    , NF90_FLOAT, (/wlID,latID,timeID/),      var_aod_ID)
     !print *, trim(NF90_STRERROR(iret))
-    IF (iret /= 18*NF90_NOERR) STOP 'Error in creating file variables'
+    IF (iret /= 19*NF90_NOERR) STOP 'Error in creating file variables'
 
     iret = NF90_NOERR
-    iret = iret + nf90_put_att(ncid, var_t_ID     , "long_name", "fractional year")
-    iret = iret + nf90_put_att(ncid, var_t_ID     , "units"    , "year")
+    iret = iret + nf90_put_att(ncid, var_t_ID     , "long_name", "time")
+    iret = iret + nf90_put_att(ncid, var_t_ID     , "units"    , "days since 1-1-1")
+    iret = iret + nf90_put_att(ncid, var_t_ID     , "calendar" , "360_day")
+    iret = iret + nf90_put_att(ncid, var_dy_ID    , "long_name", "decimal year")
+    iret = iret + nf90_put_att(ncid, var_dy_ID    , "units"    , "years")
     iret = iret + nf90_put_att(ncid, var_il_ID    , "long_name", "model level at interfaces")
     iret = iret + nf90_put_att(ncid, var_ml_ID    , "long_name", "model level at midpoints")
     iret = iret + nf90_put_att(ncid, var_z_ID     , "long_name", "altitude")
@@ -384,7 +398,7 @@ PROGRAM eva_build_forcing_file_on_levels
     iret = iret + nf90_put_att(ncid, var_plim_ID  , "long_name", "pressure at layer interfaces")
     iret = iret + nf90_put_att(ncid, var_plim_ID  , "units"    , "Pa")
     iret = iret + nf90_put_att(ncid, var_ext_ID   , "long_name", "aerosol extinction")
-    iret = iret + nf90_put_att(ncid, var_ext_ID   , "units"    , "m**-1")
+    iret = iret + nf90_put_att(ncid, var_ext_ID   , "units"    , "km**-1")
     iret = iret + nf90_put_att(ncid, var_ssa_ID   , "long_name", "single scattering albedo")
     iret = iret + nf90_put_att(ncid, var_ssa_ID   , "units"    , "unitless")
     iret = iret + nf90_put_att(ncid, var_asy_ID   , "long_name", "aerosol scattering asymmtery factor")
@@ -394,10 +408,11 @@ PROGRAM eva_build_forcing_file_on_levels
     iret = iret + nf90_put_att(ncid, var_aod_ID  , "long_name", "aerosol optical depth")
     iret = iret + nf90_put_att(ncid, var_aod_ID  , "units"    , "unitless")
     iret = iret + nf90_enddef(ncid)
-    IF (iret /= 34*NF90_NOERR) STOP 'Error in creating file variable attributes'
+    IF (iret /= 37*NF90_NOERR) STOP 'Error in creating file variable attributes'
     !
     iret = NF90_NOERR  
-    iret = iret + nf90_put_var(ncid, var_t_ID    , values=fyear)
+    iret = iret + nf90_put_var(ncid, var_t_ID    , values=days_since_111)
+    iret = iret + nf90_put_var(ncid, var_dy_ID   , values=fyear) 
     iret = iret + nf90_put_var(ncid, var_ml_ID   , values=levels)
     iret = iret + nf90_put_var(ncid, var_il_ID   , values=ilev)
     iret = iret + nf90_put_var(ncid, var_z_ID    , values=TRANSPOSE(z))
@@ -415,7 +430,7 @@ PROGRAM eva_build_forcing_file_on_levels
     iret = iret + nf90_put_var(ncid, var_pmid_ID , values=p_mid)
     iret = iret + nf90_put_var(ncid, var_plim_ID , values=p_lim)
     iret = iret + nf90_close(ncid)
-    IF (iret /= 19*NF90_NOERR) STOP 'error writing data or in closing file'
+    IF (iret /= 20*NF90_NOERR) STOP 'error writing data or in closing file'
   end do
 
 END PROGRAM eva_build_forcing_file_on_levels 
