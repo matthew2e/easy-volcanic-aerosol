@@ -180,7 +180,7 @@ PROGRAM eva_build_aod_file
   IF (iret /= 4*NF90_NOERR) STOP 'Error in Creating File Dimensions'
 
    iret = NF90_NOERR
-    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"title","EVA v1.0: stratospheric AOD")
+    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"title","EVA v1.1: stratospheric AOD")
     iret = iret + nf90_put_att(ncid,NF90_GLOBAL,'history','Created on '//date(7:8)//'.'//date(5:6)//'.'//date(1:4)//' at '//time(1:2)//':'//time(3:4)//':'//time(5:6))
     IF (iret /= 2*NF90_NOERR) STOP 'Error in Creating File Attributes' 
  
