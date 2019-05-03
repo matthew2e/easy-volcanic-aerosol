@@ -289,13 +289,13 @@ PROGRAM eva_build_forcing_file_cmip6
     IF (iret /= 6*NF90_NOERR) STOP 'Error in Creating File Dimensions'
     !
     iret = NF90_NOERR
-    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"title","EVA v1.0: stratospheric aerosol optical properties")
+    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"title","EVA v1.1: stratospheric aerosol optical properties")
     iret = iret + nf90_put_att(ncid,NF90_GLOBAL,'history','Created on '//date(7:8)//'.'//date(5:6)//'.'//date(1:4)//' at '//time(1:2)//':'//time(3:4)//':'//time(5:6))
     IF (iret /= 2*NF90_NOERR) STOP 'Error in Creating File Attributes'
 
     iret = NF90_NOERR
     iret = iret + nf90_def_var(ncid, 'time'         , NF90_FLOAT, timeID,  var_t_ID)
-    iret = iret + nf90_def_var(ncid, 'altiude'      , NF90_FLOAT, zID,     var_z_ID)
+    iret = iret + nf90_def_var(ncid, 'altitude'     , NF90_FLOAT, zID,     var_z_ID)
     iret = iret + nf90_def_var(ncid, 'latitude'     , NF90_FLOAT, latID,   var_lat_ID)
     iret = iret + nf90_def_var(ncid, 'dec_year'     , NF90_FLOAT, timeID,  var_dy_ID)
 !    iret = iret + nf90_def_var(ncid, 'solar_bands'  , NF90_FLOAT, wlID,    var_sw_ID)
@@ -311,13 +311,13 @@ PROGRAM eva_build_forcing_file_cmip6
     !print *, trim(NF90_STRERROR(iret)) 
     iret = iret + nf90_def_var(ncid, 'omega_earth'  , NF90_FLOAT, (/zID,latID,lwID,timeID/), var_ssa_lw_ID) 
     iret = iret + nf90_def_var(ncid, 'g_earth'      , NF90_FLOAT, (/zID,latID,lwID,timeID/), var_asy_lw_ID) 
-    iret = iret + nf90_def_var(ncid, 'reff'         , NF90_FLOAT, (/zID,latID,timeID/), var_reff_ID)
-    IF (iret /= 16*NF90_NOERR) STOP 'Error in creating file variables'
+    !iret = iret + nf90_def_var(ncid, 'reff'         , NF90_FLOAT, (/zID,latID,timeID/), var_reff_ID)
+    IF (iret /= 15*NF90_NOERR) STOP 'Error in creating file variables'
 
     iret = NF90_NOERR
     iret = iret + nf90_put_att(ncid, var_t_ID     , "long_name", "time")
     iret = iret + nf90_put_att(ncid, var_t_ID     , "units"    , "days since 1-1-1")
-    iret = iret + nf90_put_att(ncid, var_t_ID     , "long_name", "fractional year")
+    iret = iret + nf90_put_att(ncid, var_t_ID     , "calendar" , "360_day")
     iret = iret + nf90_put_att(ncid, var_dy_ID    , "long_name", "decimal year")
     iret = iret + nf90_put_att(ncid, var_dy_ID    , "units"    , "years")
     iret = iret + nf90_put_att(ncid, var_z_ID     , "units"    , "km")
@@ -345,10 +345,10 @@ PROGRAM eva_build_forcing_file_cmip6
     iret = iret + nf90_put_att(ncid, var_ssa_lw_ID   , "units"    , "unitless")
     iret = iret + nf90_put_att(ncid, var_asy_lw_ID   , "long_name", "aerosol scattering asymmtery factor")
     iret = iret + nf90_put_att(ncid, var_asy_lw_ID   , "units"    , "unitless")
-    iret = iret + nf90_put_att(ncid, var_reff_ID  , "long_name", "aerosol effective radius")
-    iret = iret + nf90_put_att(ncid, var_reff_ID  , "units"    , "mu m")
+    !iret = iret + nf90_put_att(ncid, var_reff_ID  , "long_name", "aerosol effective radius")
+    !iret = iret + nf90_put_att(ncid, var_reff_ID  , "units"    , "mu m")
     iret = iret + nf90_enddef(ncid)
-    IF (iret /= 30*NF90_NOERR) STOP 'Error in creating file variable attributes'
+    IF (iret /= 28*NF90_NOERR) STOP 'Error in creating file variable attributes'
     !
     iret = NF90_NOERR  
     iret = iret + nf90_put_var(ncid, var_t_ID      , values=fyear)
@@ -365,9 +365,9 @@ PROGRAM eva_build_forcing_file_cmip6
     iret = iret + nf90_put_var(ncid, var_ext_lw_ID    , values=ext_lw)
     iret = iret + nf90_put_var(ncid, var_ssa_lw_ID    , values=ssa_lw)
     iret = iret + nf90_put_var(ncid, var_asy_lw_ID    , values=asy_lw)
-    iret = iret + nf90_put_var(ncid, var_reff_ID   , values=reff)
+    !iret = iret + nf90_put_var(ncid, var_reff_ID   , values=reff)
     iret = iret + nf90_close(ncid)
-    IF (iret /= 16*NF90_NOERR) STOP 'error writing data or in closing file'
+    IF (iret /= 15*NF90_NOERR) STOP 'error writing data or in closing file'
   end do
 
 END PROGRAM eva_build_forcing_file_cmip6 
