@@ -596,9 +596,9 @@ contains
 
          SO4(2,i) = (SO4(2,i-1)+SO4_new(2,i))*exp(-1/tau_loss_EQ_use) &
                           ! add production and subtract STE loss
-                  - (SO4(2,i-1) - SO4(3,i-1))*SHmix &
+                  - (SO4(2,i-1) - SO4(1,i-1))*SHmix &
                            ! subtract loss by mixing to SH
-                  - (SO4(2,i-1)- SO4(1,i-1))*NHmix &
+                  - (SO4(2,i-1)- SO4(3,i-1))*NHmix &
                            ! subtract loss by mixing to NH
                    - SO4(2,i-1)*NHtrans - SO4(2,i-1)*SHtrans
                            ! subtract loss by residual circ to both hemispheres
