@@ -174,14 +174,16 @@ PROGRAM eva_build_aod_file
   call date_and_time(DATE=date,TIME=time)
 
   iret = NF90_NOERR
-  iret = iret + nf90_create(TRIM(aod_output_dir)//'/'//TRIM(aod_file_savename)//'_'//trim(start_yearstr)//'_'//trim(end_yearstr)//'.nc', NF90_CLOBBER, ncid)
+  iret = iret + nf90_create(TRIM(aod_output_dir)//'/'//TRIM(aod_file_savename)//'_'//trim(start_yearstr)//&
+                                            '_'//trim(end_yearstr)//'.nc', NF90_CLOBBER, ncid)
   iret = iret + nf90_def_dim(ncid, 'time' ,NF90_UNLIMITED    , timeID)
   iret = iret + nf90_def_dim(ncid, 'lat'  ,nlat  , latID)
   IF (iret /= 4*NF90_NOERR) STOP 'Error in Creating File Dimensions'
 
    iret = NF90_NOERR
     iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"title","EVA v1.1: stratospheric AOD")
-    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,'history','Created on '//date(7:8)//'.'//date(5:6)//'.'//date(1:4)//' at '//time(1:2)//':'//time(3:4)//':'//time(5:6))
+    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,'history','Created on '//date(7:8)//'.'//date(5:6)// &
+                                 '.'//date(1:4)//' at '//time(1:2)//':'//time(3:4)//':'//time(5:6))
     IF (iret /= 2*NF90_NOERR) STOP 'Error in Creating File Attributes' 
  
   iret = NF90_NOERR

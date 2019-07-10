@@ -103,12 +103,13 @@ PROGRAM eva_build_forcing_file_on_levels
        wn_lo(:)            , & ! lower bound of spectral band, wavenumber
        wn_up(:)            , & ! upper bound of spectral band, wavenumber
        levels(:)           , & ! model levels 
-       zind(:)             , & ! inices of z vector, for use with reverse z axis
+!       zind(:)             , & ! inices of z vector, for use with reverse z axis
        z(:,:)                  ! height grid for EVA calculations
   REAL ::                    &
        !z(46)               , & ! height grid for EVA calculations
        so4_in(3)                ! sulfate triple to use in time loop
   INTEGER :: z_option = 3       ! 1=standard 1km grid, 2=0.5 km grid, 3=read from grid file, 4=self defined vector
+  INTEGER, ALLOCATABLE :: zind(:) ! indices of z vector, for use with reverse z axis
   character(8)  :: date
   character(10) :: time
   LOGICAL :: signed_year_ouput=.true.  ! signed years useful when extending into BCE
@@ -336,7 +337,8 @@ PROGRAM eva_build_forcing_file_on_levels
 
     iret = NF90_NOERR
     write(*,*) TRIM(forcing_output_dir)//'/'//TRIM(forcing_file_savename)//'_'//trim(yearstr)//'.nc'
-    iret = iret + nf90_create(TRIM(forcing_output_dir)//'/'//TRIM(forcing_file_savename)//'_'//trim(yearstr)//'.nc', NF90_CLOBBER, ncid)
+    iret = iret + nf90_create(TRIM(forcing_output_dir)//'/'//TRIM(forcing_file_savename)// &
+                                          '_'//trim(yearstr)//'.nc', NF90_CLOBBER, ncid)
     iret = iret + nf90_def_dim(ncid, 'time' ,NF90_UNLIMITED    , timeID)
     iret = iret + nf90_def_dim(ncid, 'ilev' ,nz+1  , ilID)
     iret = iret + nf90_def_dim(ncid, 'mlev' ,nz    , mlID)
@@ -346,7 +348,8 @@ PROGRAM eva_build_forcing_file_on_levels
     !
     iret = NF90_NOERR
     iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"title","EVA v1.1: stratospheric aerosol optical properties")
-    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,'history','Created on '//date(7:8)//'.'//date(5:6)//'.'//date(1:4)//' at '//time(1:2)//':'//time(3:4)//':'//time(5:6))
+    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,'history','Created on '//date(7:8)//'.'//date(5:6)// &
+                                 '.'//date(1:4)//' at '//time(1:2)//':'//time(3:4)//':'//time(5:6))
     IF (iret /= 2*NF90_NOERR) STOP 'Error in Creating File Attributes'
 
     iret = NF90_NOERR
