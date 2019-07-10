@@ -410,7 +410,7 @@ contains
       integer :: ntime, i, j, k
 
       real, dimension(3,n) :: SO2_in, SO2, SO4_new
-      real, dimension(:), allocatable :: erup_ssi, erup_lat, erup_hemi
+      real, dimension(:), allocatable :: erup_vssi, erup_lat, erup_hemi
       real :: C, tau_loss_EQ_use, tau_loss_ET_use, SO4_tot
       real, dimension(n) :: hemi_corr_nh, hemi_corr_sh
       integer, dimension(:), allocatable :: erup_dur, erup_region, erup_year, erup_month, erup_day
@@ -468,7 +468,7 @@ contains
       allocate(erup_month(nerup))
       allocate(erup_day(nerup))
       allocate(erup_lat(nerup))
-      allocate(erup_ssi(nerup))
+      allocate(erup_vssi(nerup))
       allocate(erup_region(nerup))
       allocate(erup_hemi(nerup))
       allocate(erup_dur(nerup))
@@ -489,9 +489,10 @@ contains
       iret = nf90_get_var(ncid, VarID, erup_lat(:)  , start=(/1/) ,count=(/nerup/))
       IF (iret /= NF90_NOERR) STOP 'Error in reading eruption lat'
 
-      iret = nf90_inq_varid(ncid, "ssi", VarID)
-      iret = nf90_get_var(ncid, VarID, erup_ssi(:)  , start=(/1/) ,count=(/nerup/))
-      IF (iret /= NF90_NOERR) STOP 'Error in reading eruption ssi'
+      iret = nf90_inq_varid(ncid, "vssi", VarID)
+      IF (iret /= NF90_NOERR) iret = nf90_inq_varid(ncid, "ssi", VarID) !Back compatable
+      iret = nf90_get_var(ncid, VarID, erup_vssi(:)  , start=(/1/) ,count=(/nerup/))
+      IF (iret /= NF90_NOERR) STOP 'Error in reading eruption VSSI'
 
       iret = nf90_inq_varid(ncid, "hemi", VarID)
       iret = nf90_get_var(ncid, VarID, erup_hemi(:)  , start=(/1/) ,count=(/nerup/))
@@ -508,7 +509,7 @@ contains
 
       iret = nf90_close  (ncid)
 
-      !write(*,*) erup_ssi
+      !write(*,*) erup_vssi
  
       do i=1,nerup
          IF ( erup_lat(i) < -tropical_edge ) THEN
@@ -530,9 +531,9 @@ contains
                if (year(j) .eq. erup_year(i) .and. month(j) .eq. erup_month(i)) then
                   ! set SO2_in for this date = elist_SO2
                   if (erup_dur(i) .gt. 0) then
-                     SO2_in(erup_region(i),j:j+erup_dur(i))=SO2_in(erup_region(i),j:j+erup_dur(i)) + erup_ssi(i)/REAL(erup_dur(i))
+                     SO2_in(erup_region(i),j:j+erup_dur(i))=SO2_in(erup_region(i),j:j+erup_dur(i)) + erup_vssi(i)/REAL(erup_dur(i))
                   else
-                     SO2_in(erup_region(i),j)=SO2_in(erup_region(i),j) + erup_ssi(i)
+                     SO2_in(erup_region(i),j)=SO2_in(erup_region(i),j) + erup_vssi(i)
                   end if
                   seas_asy=0.4*seasonal_amp*cos(2.0*pi*(month(j)+4.0)/12.0)+1 ! a rough approximation of what the 
                                                                  ! seasonal paramterized transport produces
@@ -621,7 +622,7 @@ contains
       
       !write(*,*) SO4(:,3)
 
-      deallocate(erup_ssi)
+      deallocate(erup_vssi)
       deallocate(erup_region)
       deallocate(erup_year)
       deallocate(erup_month)
