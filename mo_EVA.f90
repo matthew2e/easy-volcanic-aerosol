@@ -430,7 +430,6 @@ contains
 
       call read_parameter_set
 
-
       ntime=size(year)
       
       SO2_in=0

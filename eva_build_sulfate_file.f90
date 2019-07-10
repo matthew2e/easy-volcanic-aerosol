@@ -77,7 +77,7 @@ PROGRAM eva_build_sulfate_file
 
   CALL sulfate3_timeseries(year,month,ntime,SO4)
 
-  write(*,*) 'Writing sulfate file'
+  write(*,*) 'Writing sulfate file: eva_sulfate_timeseries.nc'
 
   fyear=year+(month-1)/12.
 
@@ -89,9 +89,11 @@ PROGRAM eva_build_sulfate_file
 
   iret = NF90_NOERR
   iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"title","EVA v1.1: timeseries of effective sulfate mass in three regions")
+  iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"input_file",TRIM(eruption_list_filename))
+  iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"parameter_file",TRIM(parameter_set_filename))
   iret = iret + nf90_put_att(ncid,NF90_GLOBAL,'history','Created on '//date(7:8)//'.'//date(5:6)//'.'//date(1:4)//' &
                                                          at '//time(1:2)//':'//time(3:4)//':'//time(5:6))
-  IF (iret /= 2*NF90_NOERR) STOP 'Error in Creating File Attributes'
+  IF (iret /= 4*NF90_NOERR) STOP 'Error in Creating File Attributes'
 
   !
   iret = NF90_NOERR
@@ -100,7 +102,7 @@ PROGRAM eva_build_sulfate_file
   iret = iret + nf90_put_att(ncid, var_t_ID       , "long_name", "fractional year")
   iret = iret + nf90_put_att(ncid, var_t_ID       , "units"    , "year")
   iret = iret + nf90_put_att(ncid, var_so4_ID     , "long_name", "sulfate mass")
-  iret = iret + nf90_put_att(ncid, var_so4_ID     , "units"    , "Tg S")
+  iret = iret + nf90_put_att(ncid, var_so4_ID     , "units"    , "TgS")
   iret = iret + nf90_enddef(ncid)
   IF (iret /= 7*NF90_NOERR) STOP 'Error in creating file variables'
   !
