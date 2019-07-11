@@ -736,7 +736,7 @@ contains
          VarID        , & !< pointer to generic dimension in netCDF file
          nreff        , & !< length of effective radius vector in lookuptable
          nwl          
-      write(*,*) 'Reading look up table:', TRIM(Lookuptable_filename)
+      write(*,*) 'Reading look up table: ', TRIM(Lookuptable_filename)
       ! read in the lookup tables
       !
       iret = nf90_open(TRIM(Lookuptable_filename), NF90_NOWRITE, ncid)

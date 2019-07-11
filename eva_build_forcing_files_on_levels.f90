@@ -123,7 +123,7 @@ PROGRAM eva_build_forcing_file_on_levels
 
   ! Define time grid
 
-  write(*,*) 'Building forcing'
+  write(*,*) 'Building forcing on levels'
 
   nyear=forcing_end_year-forcing_start_year+1
   ntime=nyear*12
@@ -144,7 +144,7 @@ PROGRAM eva_build_forcing_file_on_levels
   end do
 
   !fyear=year+(month-1)/12.
-  write (*,*) "Reading grid file"
+  !write (*,*) "Reading grid file"
 
   ! Read grid file for lat and wavelengths
   iret = nf90_open(TRIM(grid_filename), NF90_NOWRITE, ncid)
@@ -219,9 +219,6 @@ PROGRAM eva_build_forcing_file_on_levels
     zind= (/ (i, i = 1, nz, 1) /)
   END IF
  
-  !write(*,*) z(1,:)
-  !write(*,*) z(1,zind)
-
 !  allocate(levels(nz))
 !  levels = (/ (i, i = 1, nz, 1) /)
 !  write(*,*) levels
@@ -243,7 +240,7 @@ PROGRAM eva_build_forcing_file_on_levels
   allocate(asy_vec(nz,nwl))
   allocate(aod_dum(nwl))
   allocate(aod(nwl,nlat,12))
-  write(*,*) "arrays allocated"
+!  write(*,*) "arrays allocated"
 
   iret = nf90_inq_varid(ncid, "lat", VarID)
   iret = nf90_get_var(ncid, VarID, lat(:)  , start=(/1/) ,count=(/nlat/))
@@ -271,7 +268,7 @@ PROGRAM eva_build_forcing_file_on_levels
 
   
   ! Input sulfate data
-  write (*,*) "reading sulfate file"
+  write (*,*) "Reading sulfate file: "//TRIM(sulfate_filename)
 
   iret = nf90_open(TRIM(sulfate_filename), NF90_NOWRITE, ncid)
   IF (iret /= NF90_NOERR) STOP 'Error in opening sulfate file'
@@ -336,7 +333,7 @@ PROGRAM eva_build_forcing_file_on_levels
     end if
 
     iret = NF90_NOERR
-    write(*,*) TRIM(forcing_output_dir)//'/'//TRIM(forcing_file_savename)//'_'//trim(yearstr)//'.nc'
+    write(*,*) 'Writing forcing file: ', TRIM(forcing_output_dir)//'/'//TRIM(forcing_file_savename)//'_'//trim(yearstr)//'.nc'
     iret = iret + nf90_create(TRIM(forcing_output_dir)//'/'//TRIM(forcing_file_savename)// &
                                           '_'//trim(yearstr)//'.nc', NF90_CLOBBER, ncid)
     iret = iret + nf90_def_dim(ncid, 'time' ,NF90_UNLIMITED    , timeID)

@@ -166,10 +166,11 @@ PROGRAM eva_build_aod_file
   write ( start_yearstr , '(i0)' ) aod_start_year
   write ( end_yearstr , '(i0)' ) aod_end_year
 
-  write(*,*) end_yearstr, trim(end_yearstr)
+  !write(*,*) end_yearstr, trim(end_yearstr)
 
   
-  write(*,*) 'Writing forcing files'
+  write(*,*) 'Writing AOD file: '//TRIM(aod_output_dir)//'/'//TRIM(aod_file_savename)//&
+                                   '_'//trim(start_yearstr)//'_'//trim(end_yearstr)//'.nc'
 
   call date_and_time(DATE=date,TIME=time)
 
@@ -207,7 +208,7 @@ PROGRAM eva_build_aod_file
   iret = iret + nf90_put_att(ncid, var_reff_ID  , "units"    , "um")
   iret = iret + nf90_enddef(ncid)
 
-write(*,*) iret, NF90_NOERR
+  !write(*,*) iret, NF90_NOERR
   IF (iret /= 10*NF90_NOERR) STOP 'Error in creating file variable attributes'
   !
   iret = NF90_NOERR  

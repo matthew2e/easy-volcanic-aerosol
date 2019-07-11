@@ -152,6 +152,7 @@ PROGRAM eva_build_forcing_file
   IF (iret /= NF90_NOERR) STOP 'Error in reading gridfile wavelengths'
 
   ! Input sulfate data
+  write (*,*) "Reading sulfate file: "//TRIM(sulfate_filename)
 
   iret = nf90_open(TRIM(sulfate_filename), NF90_NOWRITE, ncid)
   IF (iret /= NF90_NOERR) STOP 'Error in opening sulfate file'
@@ -212,6 +213,8 @@ PROGRAM eva_build_forcing_file
     else
        write ( yearstr, '( i4.4)' ) this_year
     end if
+
+    write(*,*) 'Writing forcing file: ', TRIM(forcing_output_dir)//'/'//TRIM(forcing_file_savename)//'_'//trim(yearstr)//'.nc'
 
     iret = NF90_NOERR
     iret = iret + nf90_create(TRIM(forcing_output_dir)//'/'//TRIM(forcing_file_savename)//'_'&

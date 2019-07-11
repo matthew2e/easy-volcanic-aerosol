@@ -1,4 +1,4 @@
-Easy Volcanic Aerosol (EVA) version 1: users guide
+Easy Volcanic Aerosol (EVA) version 1.2: users guide
 
 Structure
 
@@ -6,28 +6,28 @@ The EVA package is composed of:
 
 1. The mo_EVA.f90 FORTRAN module: this holds all the subroutines used to calculate volcanic forcing
 2. Three input files in netcdf format:
-  a. EVA parameter set, specifying the values to be used for the parameterizations in the mo_EVA routines
-  b.An eruption history file, specifying the date , location, stratospheric sulfur injection (in Tg S) and, optionally, the hemispheric asymmetry factor to be applied to each eruption.
-  c. A lookup table, containing the scaling factors to convert EXT550 and reff to wavelength dependent EXT, SSA and ASY based on Mie Theory.
-3. A FORTRAN main file to build a sulfate file specifying the timeseries of sulfate in the equatorial, NH and SH regions based on the box model transport scheme.
-4. A FORTRAN main file to build aerosol property (or forcing) files from the sulfate timeseries.
+   a. EVA parameter set, specifying the values to be used for the parameterizations in the mo_EVA routines. Two parameter sets are available, with "background" injections representative of modern (~2000s) or      preindistrial (1850) emissions.
+   b. An eruption history file, specifying the date , location, volcanic stratospheric sulfur injection (VSSI, in TgS) and, optionally, the hemispheric asymmetry factor to be applied to each eruption. 
+   c. A lookup table, containing the scaling factors to convert EXT550 and reff to wavelength dependent EXT, SSA and ASY based on Mie Theory.
+3. A FORTRAN main file (eva_build_sulfate_file.f90) to build a sulfate file specifying the timeseries of sulfate in the equatorial, NH and SH regions based on the EVA box model transport scheme.
+4. A FORTRAN main file (eva_build_forcing_files.f90) to build aerosol property (or forcing) files from the sulfate timeseries.
 5. A netcdf file containing specifications of the grids to be used in the output of EVA, ie., latitude, and wavelength.
 
 Compiling
 
 The FORTRAN routines all make use of the NETCDF fortran library, and so need to be linked to the library upon compilation. This can be achieved either by specifying the path to the netCDF intallation upon compilation:
 
->> gcc -c mo_EVA.f90 -I $(NETCDF)/include
+>> gfortran -c mo_EVA.f90 -I ${NETCDF}/include
 
 or by first creating a symbolic link to the netcdf.mod file:
 
->> ln -s $(NETCDF)/include/netcdf.mod .
->> gcc c mo_EVA.f90
+>> ln -s ${NETCDF}/include/netcdf.mod .
+>> gfortran c mo_EVA.f90
 
-where, in both cases, $(NETCDF) refers to the directory of the netcdf installation on your system.
+where, in both cases, ${NETCDF} refers to the directory of the netcdf installation on your system.
 Creating executables from the main programs requires linking to the mo_EVA.o module, and the netcdf libraries, e.g.,
 
->> gcc -o eva_build_sulfate_file eva_build_sulfate_file.f90 mo_EVA.o -L$(NETCDF)/lib lnetcdf
+>> gfortran -o eva_build_sulfate_file eva_build_sulfate_file.f90 mo_EVA.o -L${NETCDF}/lib lnetcdf
 
 with careful attention to the L and l flags required on your system.
 
@@ -35,7 +35,7 @@ Running
 
 Step 1: build sulfate file
 
-The script eva_build_sulfate_file.f90 reads the eruption history file, and based on the parameter settings in EVAv1_parameter_set_v1.0.nc, builds a timeseries of effective sulfate mass*, saved in file eva_sulfate_timeseries.nc.
+The script eva_build_sulfate_file.f90 reads the eruption history file, and based on the parameter settings in EVAv1_parameter_set_modernBG.nc, builds a timeseries of effective sulfate mass*, saved in file eva_sulfate_timeseries.nc.
 
 * Effective sulfate mass should not necessarily be interpreted as being an accurate estimate of the real mass of sulfate aerosol for eruptions - please see discussion in the EVA paper.
 
@@ -55,7 +55,8 @@ Modifications
 
 New input files
 
-Any of the input files can be readily swapped for alternative files, by changing the filenames given in the mo_EVA.f90 module and recompiling the module. This can be done to change the source of eruption histories, change the parameter setting of EVA, or change the Mie lookup tables. Care must be taken that the variable names and dimensions of the new input files are identical to those of the default input files.
+Any of the input files can be readily swapped for alternative files, by changing the filenames given in the "eva_namelist". This can be done to change the source of eruption histories or change the parameter settings of EVA. Care must be taken that the variable names and dimensions of the new input files are identical to those of the default input files.
+
 
 For different model set ups
 
