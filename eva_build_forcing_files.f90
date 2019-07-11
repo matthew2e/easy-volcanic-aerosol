@@ -36,6 +36,7 @@ PROGRAM eva_build_forcing_file
        nwl                , & ! number of wavelengths
        iret               , & ! netCDF reading return variable
        ncid               , & ! netCDF file ID
+       sulfate_ncid       , & ! netcdf file ID for sulfate file
        VarID              , & ! pointer to generic dimension in netCDF file
        timeID             , & ! pointer to time dimension in netCDF file
        zID                , & ! pointer to z dimension in netCDF file
@@ -156,6 +157,7 @@ PROGRAM eva_build_forcing_file
 
   iret = nf90_open(TRIM(sulfate_filename), NF90_NOWRITE, ncid)
   IF (iret /= NF90_NOERR) STOP 'Error in opening sulfate file'
+  sulfate_ncid=ncid
   iret = nf90_inq_dimid(ncid, "time", VarID)
   iret = nf90_inquire_dimension(ncid, VarID, len = nSO4)
   iret = nf90_inq_dimid(ncid, "plume", VarID)
@@ -227,11 +229,14 @@ PROGRAM eva_build_forcing_file
     !
     iret = NF90_NOERR
     iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"title","EVA v1.1: stratospheric aerosol optical properties")
-    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"input_file",TRIM(eruption_list_filename))
-    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"parameter_file",TRIM(parameter_set_filename))
+    iret = iret + nf90_copy_att(sulfate_ncid,NF90_GLOBAL,"input_vssi_file",ncid,NF90_GLOBAL)
+    iret = iret + nf90_copy_att(sulfate_ncid,NF90_GLOBAL,"input_sulfate_parameter_file",ncid,NF90_GLOBAL)
+    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"input_forcing_parameter_file",TRIM(parameter_set_filename))
+    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"input_grid_file",TRIM(grid_filename))
+    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"input_Mie_file",TRIM(Lookuptable_filename))
     iret = iret + nf90_put_att(ncid,NF90_GLOBAL,'history','Created on '//date(7:8)//'.'//date(5:6)//'.' &
                                        //date(1:4)//' at '//time(1:2)//':'//time(3:4)//':'//time(5:6))
-    IF (iret /= 4*NF90_NOERR) STOP 'Error in Creating File Attributes'
+    IF (iret /= 7*NF90_NOERR) STOP 'Error in Creating File Attributes'
 
     iret = NF90_NOERR
     iret = iret + nf90_def_var(ncid, 'time'   , NF90_FLOAT, timeID,  var_t_ID)
