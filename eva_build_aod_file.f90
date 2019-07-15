@@ -184,7 +184,11 @@ PROGRAM eva_build_aod_file
   IF (iret /= 4*NF90_NOERR) STOP 'Error in Creating File Dimensions'
 
   iret = NF90_NOERR
-  iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"title","EVA v1.1: stratospheric AOD")
+  iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"title","EVA v1.2: stratospheric AOD")
+  iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"EVA_reference","Toohey, M., Stevens, B., Schmidt, H., and Timmreck,&
+C.: Easy Volcanic Aerosol (EVA v1.0): an idealized forcing generator for climate simulations, Geosci. &
+Model Dev., 9, 4049-4070, https://doi.org/10.5194/gmd-9-4049-2016, 2016.")
+  iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"EVA_source_code","https://github.com/matthew2e/easy-volcanic-aerosol")
   iret = iret + nf90_copy_att(sulfate_ncid,NF90_GLOBAL,"input_vssi_file",ncid,NF90_GLOBAL)
   iret = iret + nf90_copy_att(sulfate_ncid,NF90_GLOBAL,"input_sulfate_parameter_file",ncid,NF90_GLOBAL)
   iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"input_forcing_parameter_file",TRIM(parameter_set_filename))
@@ -203,7 +207,7 @@ PROGRAM eva_build_aod_file
   IF (iret /= 5*NF90_NOERR) STOP 'Error in creating file variables'
 
   iret = NF90_NOERR
-  iret = iret + nf90_put_att(ncid, var_t_ID     , "long_name", "fractional year")
+  iret = iret + nf90_put_att(ncid, var_t_ID     , "long_name", "fractional year (ISO 8601, including year 0)")
   iret = iret + nf90_put_att(ncid, var_t_ID     , "units"    , "year")
   iret = iret + nf90_put_att(ncid, var_lat_ID   , "long_name", "latitude")
   iret = iret + nf90_put_att(ncid, var_lat_ID   , "units"    , "degrees north")

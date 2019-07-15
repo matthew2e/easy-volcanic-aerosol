@@ -30,7 +30,7 @@ module mo_EVA
    ! Input files
 
    CHARACTER(len=100)   :: eruption_list_filename = 'Eruption_list_GMD_1960_2015.nc'
-   CHARACTER(len=50)    :: parameter_set_filename = 'EVAv1_parameter_set_v1.1.nc'
+   CHARACTER(len=50)    :: parameter_set_filename = 'EVAv1_parameter_set_modernBG.nc'
    CHARACTER(len=50)    :: Lookuptable_filename   = 'eva_Mie_lookuptables.nc'
 
    ! --------------------------------------------------------------------------------------

@@ -88,7 +88,7 @@ PROGRAM eva_build_sulfate_file
   IF (iret /= 3*NF90_NOERR) STOP 'Error in Creating File Dimensions'
 
   iret = NF90_NOERR
-  iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"title","EVA v1.1: timeseries of effective sulfate mass in three regions")
+  iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"title","EVA v1.2: timeseries of effective sulfate mass in three regions")
   iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"input_vssi_file",TRIM(eruption_list_filename))
   iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"input_sulfate_parameter_file",TRIM(parameter_set_filename))
   iret = iret + nf90_put_att(ncid,NF90_GLOBAL,'history','Created on '//date(7:8)//'.'//date(5:6)//'.'//date(1:4)//' &
