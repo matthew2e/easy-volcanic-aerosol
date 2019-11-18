@@ -37,6 +37,7 @@ PROGRAM eva_build_forcing_file_cmip6
        nlw                , & ! number of longwave wavelengths
        iret               , & ! netCDF reading return variable
        ncid               , & ! netCDF file ID
+       sulfate_ncid       , & ! netcdf file ID for sulfate file
        VarID              , & ! pointer to generic dimension in netCDF file
        timeID             , & ! pointer to time dimension in netCDF file
        zID                , & ! pointer to z dimension in netCDF file
@@ -146,7 +147,7 @@ PROGRAM eva_build_forcing_file_cmip6
   ! Define EVA height grid
   z = (/ (i, i = 10, 79, 1) /) / 2.0
   nz = size(z)
-
+ 
   ! Read grid file for lat and wavelengths
   iret = nf90_open(TRIM(grid_filename), NF90_NOWRITE, ncid)
   IF (iret /= NF90_NOERR) STOP 'Error in opening grid file'
@@ -215,6 +216,7 @@ PROGRAM eva_build_forcing_file_cmip6
 
   iret = nf90_open(TRIM(sulfate_filename), NF90_NOWRITE, ncid)
   IF (iret /= NF90_NOERR) STOP 'Error in opening sulfate file'
+  sulfate_ncid=ncid
   iret = nf90_inq_dimid(ncid, "time", VarID)
   iret = nf90_inquire_dimension(ncid, VarID, len = nSO4)
   iret = nf90_inq_dimid(ncid, "plume", VarID)
@@ -246,6 +248,7 @@ PROGRAM eva_build_forcing_file_cmip6
        do j=1,nlat
          call eva_ext_reff(lat,z,lat(j),so4_in,nlat,nz,ext550_sw_vec,reff_vec)
          call eva_aop_profile(lat,z,lat(j),so4_in,lambda_sw,nsw,nlat,nz,ext_sw_vec,ssa_sw_vec,asy_sw_vec)
+
          ext550_sw(:,j,i)= ext550_sw_vec
          reff(:,j,i)  = reff_vec
          ext_sw(:,j,:,i) = ext_sw_vec
@@ -279,8 +282,11 @@ PROGRAM eva_build_forcing_file_cmip6
        write ( yearstr, '( i4.4)' ) this_year
     end if
 
+    write(*,*) 'Writing forcing file: ', TRIM(forcing_output_dir)//'/'//TRIM(forcing_file_savename)//'_'//trim(yearstr)//'.nc'
+
     iret = NF90_NOERR
-    iret = iret + nf90_create(TRIM(forcing_output_dir)//'/'//TRIM(forcing_file_savename)//'_'//trim(yearstr)//'.nc', NF90_CLOBBER, ncid)
+    iret = iret + nf90_create(TRIM(forcing_output_dir)//'/'//TRIM(forcing_file_savename)//'_'//trim(yearstr)//'.nc', &
+        NF90_CLOBBER, ncid)
     iret = iret + nf90_def_dim(ncid, 'time' ,NF90_UNLIMITED    , timeID)
     iret = iret + nf90_def_dim(ncid, 'altitude'       ,nz    , zID)
     iret = iret + nf90_def_dim(ncid, 'latitude'       ,nlat  , latID)
@@ -289,9 +295,19 @@ PROGRAM eva_build_forcing_file_cmip6
     IF (iret /= 6*NF90_NOERR) STOP 'Error in Creating File Dimensions'
     !
     iret = NF90_NOERR
-    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"title","EVA v1.1: stratospheric aerosol optical properties")
-    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,'history','Created on '//date(7:8)//'.'//date(5:6)//'.'//date(1:4)//' at '//time(1:2)//':'//time(3:4)//':'//time(5:6))
-    IF (iret /= 2*NF90_NOERR) STOP 'Error in Creating File Attributes'
+    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"title","EVA v1.2: stratospheric aerosol optical properties")
+    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"EVA_reference","Toohey, M., Stevens, B., Schmidt, H., and Timmreck,&
+              C.: Easy Volcanic Aerosol (EVA v1.0): an idealized forcing generator for climate simulations, Geosci. &
+              Model Dev., 9, 4049-4070, https://doi.org/10.5194/gmd-9-4049-2016, 2016.")
+    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"EVA_source_code","https://github.com/matthew2e/easy-volcanic-aerosol")
+    iret = iret + nf90_copy_att(sulfate_ncid,NF90_GLOBAL,"input_vssi_file",ncid,NF90_GLOBAL)
+    iret = iret + nf90_copy_att(sulfate_ncid,NF90_GLOBAL,"input_sulfate_parameter_file",ncid,NF90_GLOBAL)
+    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"input_forcing_parameter_file",TRIM(parameter_set_filename))
+    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"input_grid_file",TRIM(grid_filename))
+    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,"input_Mie_file",TRIM(Lookuptable_filename))
+    iret = iret + nf90_put_att(ncid,NF90_GLOBAL,'history','Created on '//date(7:8)//'.'//date(5:6)//'.' &
+                                       //date(1:4)//' at '//time(1:2)//':'//time(3:4)//':'//time(5:6))
+    IF (iret /= 7*NF90_NOERR) STOP 'Error in Creating File Attributes'
 
     iret = NF90_NOERR
     iret = iret + nf90_def_var(ncid, 'time'         , NF90_FLOAT, timeID,  var_t_ID)
