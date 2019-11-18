@@ -203,7 +203,7 @@ PROGRAM eva_build_forcing_file_cmip6
   iret = nf90_get_var(ncid, VarID, wl1_lw(:)  , start=(/1/) ,count=(/nlw/))
   IF (iret /= NF90_NOERR) STOP 'Error in reading gridfile wavelengths'
 
-  iret = nf90_inq_varid(ncid, "wl1_earth", VarID)
+  iret = nf90_inq_varid(ncid, "wl2_earth", VarID)
   iret = nf90_get_var(ncid, VarID, wl2_lw(:)  , start=(/1/) ,count=(/nlw/))
   IF (iret /= NF90_NOERR) STOP 'Error in reading gridfile wavelengths'
 
