@@ -113,7 +113,7 @@ PROGRAM eva_build_forcing_file_on_levels
   INTEGER, ALLOCATABLE :: zind(:) ! indices of z vector, for use with reverse z axis
   character(8)  :: date
   character(10) :: time
-  LOGICAL :: signed_year_ouput=.true.  ! signed years useful when extending into BCE
+  LOGICAL :: signed_year_ouput=.false.  ! signed years useful when extending into BCE
   real :: add_to_year_output=0       ! Sometimes used to avoid negative years in filename (set=7000 for Holo)
 
   ! Input parameters from namelist

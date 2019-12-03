@@ -266,7 +266,10 @@ contains
          v_shape_norm=v_shape/v_integral
       else
          v_shape_norm=0
-         write(*,*) "normalization <0"
+         if ( sum(SO4) > 0 ) then
+            write(*,*) "normalization <0"
+         end if
+         !write(*,*) SO4 
       end if
 
       ext550=aod*v_shape_norm
