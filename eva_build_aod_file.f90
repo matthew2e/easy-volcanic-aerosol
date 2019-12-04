@@ -113,6 +113,9 @@ PROGRAM eva_build_aod_file
   iret = nf90_open(TRIM(grid_filename), NF90_NOWRITE, ncid)
   IF (iret /= NF90_NOERR) STOP 'Error in opening grid file'
   iret = nf90_inq_dimid(ncid, "lat", VarID)
+  IF (iret /= NF90_NOERR) THEN
+     iret = nf90_inq_varid(ncid, "latitude", VarID)
+  END IF
   iret = nf90_inquire_dimension(ncid, VarID, len = nlat)
 
   allocate(aod550(nlat,ntime))
@@ -122,6 +125,9 @@ PROGRAM eva_build_aod_file
   allocate(reff_vec(nz))
 
   iret = nf90_inq_varid(ncid, "lat", VarID)
+  IF (iret /= NF90_NOERR) THEN
+     iret = nf90_inq_varid(ncid, "latitude", VarID)
+  END IF
   iret = nf90_get_var(ncid, VarID, lat(:)  , start=(/1/) ,count=(/nlat/))
   IF (iret /= NF90_NOERR) STOP 'Error in reading gridfile latitude'
 
