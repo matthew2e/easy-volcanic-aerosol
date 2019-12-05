@@ -1,0 +1,12 @@
+EVA gridfile readme
+
+Gridfiles provide EVA with the latitude, wavelength, and in some cases height grids for EVA to produce output.
+
+Gridfiles with names like "eva_gridfile_echam_T63.nc" were produced by Matthew Toohey for use with the ECHAM6 model.
+
+Gridfiles with "_z" appended to the filename have a matrix of geometric height as f(lat,pressure) added to the file. This allows EVA to interpolate aerosol properties from a height grid onto model levels using "eva_build_forcing_files_on_levels". Pressure-height mapping is based on the climatology included in the "CMIP_1850_2014_sad_V2.nc" file from the CMIP6 histoircal volcanic forcing.
+
+Gridfiles with names starting like "CMIP_..." were produced be extracting the dimension variables from the historical volcanic forcing files for CMIP6 produced by Beiping Luo and colleagues at ETH Zurich. 
+
+
+

@@ -1,0 +1,16 @@
+NETCDF=
+
+FLAGS=
+
+gfortran -c mo_EVA.f90 -I${NETCDF}/include
+
+gfortran -o eva_build_sulfate_file eva_build_sulfate_file.f90 mo_EVA.o -I${NETCDF}/include ${FLAGS} 
+
+gfortran -o eva_build_forcing_files eva_build_forcing_files.f90 mo_EVA.o -I${NETCDF}/include ${FLAGS} 
+
+gfortran -o eva_build_forcing_files_on_levels eva_build_forcing_files_on_levels.f90 mo_EVA.o -I${NETCDF}/include ${FLAGS}
+
+gfortran -o eva_build_aod_file eva_build_aod_file.f90 mo_EVA.o -I${NETCDF}/include ${FLAGS} 
+
+gfortran -o eva_build_forcing_files_cmip6 eva_build_forcing_files_cmip6.f90 mo_EVA.o -I${NETCDF}/include ${FLAGS}
+
