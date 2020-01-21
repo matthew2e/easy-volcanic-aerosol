@@ -63,7 +63,7 @@ PROGRAM eva_build_forcing_file_cmip6
        SO4_i0             , & ! index of time in SO4 file corresponding to first time of forcing file
        ind(12)            , & ! indices referencing years in full timeseries
        this_year          , & ! a single year, used in num2str 
-       days_since_111(12) , & ! for CF compliant time variable
+       mons_since_1850(12), & ! for time variable consistent with CMIP6 historical
        iyear              , & ! an index
        imonth             , & ! 
        i                  , & ! an index
@@ -274,7 +274,7 @@ PROGRAM eva_build_forcing_file_cmip6
     !this_year=year(1+(i-1)*12)
     this_year=year(y)
     fyear=this_year+(mons-1)/12.0
-    days_since_111=15+(mons-1)*30+(this_year-1)*360
+    mons_since_1850=(mons-1)+(this_year-1850)*12
     this_year=this_year+add_to_year_output
     if (signed_year_output) then
        write ( yearstr , '(SP, i5.4)' ) this_year
@@ -287,7 +287,7 @@ PROGRAM eva_build_forcing_file_cmip6
     iret = NF90_NOERR
     iret = iret + nf90_create(TRIM(forcing_output_dir)//'/'//TRIM(forcing_file_savename)//'_'//trim(yearstr)//'.nc', &
         NF90_CLOBBER, ncid)
-    iret = iret + nf90_def_dim(ncid, 'time' ,NF90_UNLIMITED    , timeID)
+    iret = iret + nf90_def_dim(ncid, 'month' ,NF90_UNLIMITED    , timeID)
     iret = iret + nf90_def_dim(ncid, 'altitude'       ,nz    , zID)
     iret = iret + nf90_def_dim(ncid, 'latitude'       ,nlat  , latID)
     iret = iret + nf90_def_dim(ncid, 'solar_bands'    ,nsw   , wlID)
@@ -310,19 +310,19 @@ PROGRAM eva_build_forcing_file_cmip6
     IF (iret /= 7*NF90_NOERR) STOP 'Error in Creating File Attributes'
 
     iret = NF90_NOERR
-    iret = iret + nf90_def_var(ncid, 'time'         , NF90_FLOAT, timeID,  var_t_ID)
+    iret = iret + nf90_def_var(ncid, 'month'        , NF90_FLOAT, timeID,  var_t_ID)
     iret = iret + nf90_def_var(ncid, 'altitude'     , NF90_FLOAT, zID,     var_z_ID)
     iret = iret + nf90_def_var(ncid, 'latitude'     , NF90_FLOAT, latID,   var_lat_ID)
     iret = iret + nf90_def_var(ncid, 'dec_year'     , NF90_FLOAT, timeID,  var_dy_ID)
 !    iret = iret + nf90_def_var(ncid, 'solar_bands'  , NF90_FLOAT, wlID,    var_sw_ID)
     iret = iret + nf90_def_var(ncid, 'wl1_sun'      , NF90_FLOAT, wlID,    var_wl1_sw_ID)
     iret = iret + nf90_def_var(ncid, 'wl2_sun'      , NF90_FLOAT, wlID,    var_wl2_sw_ID)
+    iret = iret + nf90_def_var(ncid, 'wl1_earth'    , NF90_FLOAT, lwID, var_wl1_lw_ID)
+    iret = iret + nf90_def_var(ncid, 'wl2_earth'    , NF90_FLOAT, lwID, var_wl2_lw_ID)
     iret = iret + nf90_def_var(ncid, 'ext_sun'      , NF90_FLOAT, (/zID,latID,wlID,timeID/), var_ext_sw_ID)
     !print *, trim(NF90_STRERROR(iret)) 
     iret = iret + nf90_def_var(ncid, 'omega_sun'    , NF90_FLOAT, (/zID,latID,wlID,timeID/), var_ssa_sw_ID)
     iret = iret + nf90_def_var(ncid, 'g_sun'        , NF90_FLOAT, (/zID,latID,wlID,timeID/), var_asy_sw_ID)
-    iret = iret + nf90_def_var(ncid, 'wl1_earth'    , NF90_FLOAT, lwID, var_wl1_lw_ID)
-    iret = iret + nf90_def_var(ncid, 'wl2_earth'    , NF90_FLOAT, lwID, var_wl2_lw_ID)
     iret = iret + nf90_def_var(ncid, 'ext_earth'    , NF90_FLOAT, (/zID,latID,lwID,timeID/), var_ext_lw_ID)
     !print *, trim(NF90_STRERROR(iret)) 
     iret = iret + nf90_def_var(ncid, 'omega_earth'  , NF90_FLOAT, (/zID,latID,lwID,timeID/), var_ssa_lw_ID) 
@@ -331,8 +331,8 @@ PROGRAM eva_build_forcing_file_cmip6
     IF (iret /= 15*NF90_NOERR) STOP 'Error in creating file variables'
 
     iret = NF90_NOERR
-    iret = iret + nf90_put_att(ncid, var_t_ID     , "long_name", "time")
-    iret = iret + nf90_put_att(ncid, var_t_ID     , "units"    , "days since 1-1-1")
+    iret = iret + nf90_put_att(ncid, var_t_ID     , "long_name", "month")
+    iret = iret + nf90_put_att(ncid, var_t_ID     , "units"    , "months since 1-1850")
     iret = iret + nf90_put_att(ncid, var_t_ID     , "calendar" , "360_day")
     iret = iret + nf90_put_att(ncid, var_dy_ID    , "long_name", "decimal year")
     iret = iret + nf90_put_att(ncid, var_dy_ID    , "units"    , "years")
@@ -345,16 +345,16 @@ PROGRAM eva_build_forcing_file_cmip6
     iret = iret + nf90_put_att(ncid, var_wl1_sw_ID    , "units"    , "mu m")
     iret = iret + nf90_put_att(ncid, var_wl2_sw_ID    , "long_name", "wavelength")
     iret = iret + nf90_put_att(ncid, var_wl2_sw_ID    , "units"    , "mu m")
+    iret = iret + nf90_put_att(ncid, var_wl1_lw_ID    , "long_name", "wavelength")
+    iret = iret + nf90_put_att(ncid, var_wl1_lw_ID    , "units"    , "mu m")
+    iret = iret + nf90_put_att(ncid, var_wl2_lw_ID    , "long_name", "wavelength")
+    iret = iret + nf90_put_att(ncid, var_wl2_lw_ID    , "units"    , "mu m")
     iret = iret + nf90_put_att(ncid, var_ext_sw_ID   , "long_name", "aerosol extinction")
     iret = iret + nf90_put_att(ncid, var_ext_sw_ID   , "units"    , "km**-1")
     iret = iret + nf90_put_att(ncid, var_ssa_sw_ID   , "long_name", "single scattering albedo")
     iret = iret + nf90_put_att(ncid, var_ssa_sw_ID   , "units"    , "unitless")
     iret = iret + nf90_put_att(ncid, var_asy_sw_ID   , "long_name", "aerosol scattering asymmtery factor")
     iret = iret + nf90_put_att(ncid, var_asy_sw_ID   , "units"    , "unitless")
-    iret = iret + nf90_put_att(ncid, var_wl1_lw_ID    , "long_name", "wavelength")
-    iret = iret + nf90_put_att(ncid, var_wl1_lw_ID    , "units"    , "mu m")
-    iret = iret + nf90_put_att(ncid, var_wl2_lw_ID    , "long_name", "wavelength")
-    iret = iret + nf90_put_att(ncid, var_wl2_lw_ID    , "units"    , "mu m")
     iret = iret + nf90_put_att(ncid, var_ext_lw_ID   , "long_name", "aerosol extinction")
     iret = iret + nf90_put_att(ncid, var_ext_lw_ID   , "units"    , "km**-1")
     iret = iret + nf90_put_att(ncid, var_ssa_lw_ID   , "long_name", "single scattering albedo")
@@ -367,17 +367,18 @@ PROGRAM eva_build_forcing_file_cmip6
     IF (iret /= 28*NF90_NOERR) STOP 'Error in creating file variable attributes'
     !
     iret = NF90_NOERR  
-    iret = iret + nf90_put_var(ncid, var_t_ID      , values=fyear)
+    iret = iret + nf90_put_var(ncid, var_t_ID      , values=mons_since_1850)
+    iret = iret + nf90_put_var(ncid, var_dy_ID     , values=fyear)
     iret = iret + nf90_put_var(ncid, var_z_ID      , values=z)
     iret = iret + nf90_put_var(ncid, var_lat_ID    , values=lat)
 !    iret = iret + nf90_put_var(ncid, var_sw_ID     , values=lambda)
     iret = iret + nf90_put_var(ncid, var_wl1_sw_ID , values=wl1_sw)
     iret = iret + nf90_put_var(ncid, var_wl2_sw_ID , values=wl2_sw)
+    iret = iret + nf90_put_var(ncid, var_wl1_lw_ID , values=wl1_lw)
+    iret = iret + nf90_put_var(ncid, var_wl2_lw_ID , values=wl2_lw)
     iret = iret + nf90_put_var(ncid, var_ext_sw_ID    , values=ext_sw)
     iret = iret + nf90_put_var(ncid, var_ssa_sw_ID    , values=ssa_sw)
     iret = iret + nf90_put_var(ncid, var_asy_sw_ID    , values=asy_sw)
-    iret = iret + nf90_put_var(ncid, var_wl1_lw_ID , values=wl1_lw)
-    iret = iret + nf90_put_var(ncid, var_wl2_lw_ID , values=wl2_lw)
     iret = iret + nf90_put_var(ncid, var_ext_lw_ID    , values=ext_lw)
     iret = iret + nf90_put_var(ncid, var_ssa_lw_ID    , values=ssa_lw)
     iret = iret + nf90_put_var(ncid, var_asy_lw_ID    , values=asy_lw)
