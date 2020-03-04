@@ -24,7 +24,7 @@ PROGRAM eva_build_aod_file
 
   CHARACTER(len=50) :: grid_filename         = "eva_gridfile_echam_T63_sw.nc"
   CHARACTER(len=50) :: sulfate_filename      = "eva_sulfate_timeseries.nc"
-  CHARACTER(len=50) :: aod_output_dir        = "."
+  CHARACTER(len=100):: aod_output_dir        = "."
   CHARACTER(len=50) :: aod_file_savename     = "eva_aod_echam_T63_sw"
   CHARACTER(len=5)  :: start_yearstr, end_yearstr
 

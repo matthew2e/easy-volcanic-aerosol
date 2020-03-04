@@ -251,6 +251,7 @@ contains
          aod=so4_to_aod_linear*SO4_lat
       else
          aod=so4_to_aod_nonlin*(SO4_lat**(2.0/3.0))
+         !write(*,*) 'AOD nonlinear at lat=', lat0
       end if
 
       v_shape=shape_EQ(lat0_ind,:)*SO4(2) &
@@ -379,7 +380,7 @@ contains
          v_shape_EQ(i,:) = exp(-(z-cline(i)-v_offset_EQ)**2. / (2. * v_width_EQ)**2. ) &
                                   /(v_width_EQ*sqrt(2.*pi))
 
-         ! normalize (assuming equally spaced z)
+         ! normalize 
          v_integral=0
          do j=1,nz-1
            v_integral=v_integral + 0.5*(v_shape_ET(i,j)+v_shape_ET(i,j+1))*(z(j+1)-z(j))
@@ -398,6 +399,8 @@ contains
          shape_SH(i,:)=v_shape_ET(i,:)*h_shape_SH(i)
 
       end do
+
+!      write(*,*) h_shape_EQ
 
       deallocate(sinlat)
 

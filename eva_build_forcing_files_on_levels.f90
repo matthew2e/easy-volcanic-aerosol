@@ -248,22 +248,27 @@ PROGRAM eva_build_forcing_file_on_levels
   IF (iret /= NF90_NOERR) STOP 'Error in reading gridfile latitude'
 
   iret = nf90_inq_varid(ncid, "wl_mid", VarID)
+  IF (iret /= NF90_NOERR) STOP 'Error in reading gridfile wavelengths'
   iret = nf90_get_var(ncid, VarID, lambda(:)  , start=(/1/) ,count=(/nwl/))
   IF (iret /= NF90_NOERR) STOP 'Error in reading gridfile wavelengths'
 
   iret = nf90_inq_varid(ncid, "wl_lo", VarID)
+  IF (iret /= NF90_NOERR) STOP 'Error in reading gridfile wavelengths'
   iret = nf90_get_var(ncid, VarID, wl_lo(:)  , start=(/1/) ,count=(/nwl/))
   IF (iret /= NF90_NOERR) STOP 'Error in reading gridfile wavelengths'
 
   iret = nf90_inq_varid(ncid, "wl_up", VarID)
+  IF (iret /= NF90_NOERR) STOP 'Error in reading gridfile wavelengths'
   iret = nf90_get_var(ncid, VarID, wl_up(:)  , start=(/1/) ,count=(/nwl/))
   IF (iret /= NF90_NOERR) STOP 'Error in reading gridfile wavelengths'
 
   iret = nf90_inq_varid(ncid, "wn_lo", VarID)
+  IF (iret /= NF90_NOERR) STOP 'Error in reading gridfile wavelengths'
   iret = nf90_get_var(ncid, VarID, wn_lo(:)  , start=(/1/) ,count=(/nwl/))
   IF (iret /= NF90_NOERR) STOP 'Error in reading gridfile wavelengths'
 
   iret = nf90_inq_varid(ncid, "wn_up", VarID)
+  IF (iret /= NF90_NOERR) STOP 'Error in reading gridfile wavelengths'
   iret = nf90_get_var(ncid, VarID, wn_up(:)  , start=(/1/) ,count=(/nwl/))
   IF (iret /= NF90_NOERR) STOP 'Error in reading gridfile wavelengths'
 
