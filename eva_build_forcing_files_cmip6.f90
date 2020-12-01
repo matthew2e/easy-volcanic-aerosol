@@ -18,8 +18,8 @@ PROGRAM eva_build_forcing_file_cmip6
 
   CHARACTER(len=50) :: grid_filename         = "CMIP6_ECHAM6_gridfile.nc"
   CHARACTER(len=50) :: sulfate_filename      = "eva_sulfate_timeseries.nc"
-  CHARACTER(len=50) :: forcing_output_dir    = "."
-  CHARACTER(len=50) :: forcing_file_savename = "eva_forcing_echam_T63_sw"
+  CHARACTER(len=100) :: forcing_output_dir    = "."
+  CHARACTER(len=100) :: forcing_file_savename = "eva_forcing_echam_T63_sw"
   CHARACTER(len=5)  :: yearstr
 
   INTEGER, PARAMETER :: nmon = 12
