@@ -904,22 +904,26 @@ contains
       !end if
 
       if (xout < xin(1)) then
-         interp2=0
-         return
+         !interp2=0
+         xout=xin(1)
+         !return
       end if
 
       if (xout > xin(nx)) then
-         interp2=0
-         return
+         xout=xin(nx)
+         !interp2=0
+         !return
       end if
       if (yout < yin(1)) then
-         interp2=0
-         return
+         yout=yin(1)
+         !interp2=0
+         !return
       end if
 
       if (yout > yin(ny)) then
-         interp2=0 
-         return
+         yout=yin(ny)
+         !interp2=0 
+         !return
       end if 
         
       j=1 
