@@ -1,0 +1,26 @@
+# compile_eva_template
+#
+# Author: Matthew Toohey (matthew.toohey@usask.ca)
+# Last update, October 2022
+#
+# This file contains a template script that can be used to compile EVA once the path to the directory containing the FORTRAN NETCDF libraries is given, as well as the compilation flags appropriate for the system.
+# Note also that appropriate modules may need to be loaded before running this compilation script, e.g., gcc and netcdf-fortran
+# One way to use this file would be to copy it to a new file, named 'compile_eva_<machine>', with the name of  your machine inserted, then edit this file with the 
+# appropriate NETCDF and FLAGS variables, then make the script executable and run it to compile the EVA routines
+
+NETCDF=
+
+FLAGS=
+
+gfortran -c mo_EVA.f90 -I${NETCDF}/include
+
+gfortran -o eva_build_sulfate_file eva_build_sulfate_file.f90 mo_EVA.o -I${NETCDF}/include ${FLAGS} 
+
+gfortran -o eva_build_forcing_files eva_build_forcing_files.f90 mo_EVA.o -I${NETCDF}/include ${FLAGS} 
+
+gfortran -o eva_build_forcing_files_on_levels eva_build_forcing_files_on_levels.f90 mo_EVA.o -I${NETCDF}/include ${FLAGS}
+
+gfortran -o eva_build_aod_file eva_build_aod_file.f90 mo_EVA.o -I${NETCDF}/include ${FLAGS} 
+
+gfortran -o eva_build_forcing_files_cmip6 eva_build_forcing_files_cmip6.f90 mo_EVA.o -I${NETCDF}/include ${FLAGS}
+
