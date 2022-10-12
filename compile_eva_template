@@ -8,10 +8,14 @@
 # One way to use this file would be to copy it to a new file, named 'compile_eva_<machine>', with the name of  your machine inserted, then edit this file with the 
 # appropriate NETCDF and FLAGS variables, then make the script executable and run it to compile the EVA routines
 
+# Insert path to netcdf library here, e.g., NETCDF=/software/packages/netcdf-fortran-4.5.3/
 NETCDF=
 
-FLAGS=
+# Insert flags here, e.g., FLAGS="-L${NETCDF}/lib -lnetcdf -lnetcdff"
+# (Note flags may be much more complicated)
+FLAGS=" "
 
+# These commands compile the EVA module mo_EVA.f90, then the main programs, each linked to the EVA module object file
 gfortran -c mo_EVA.f90 -I${NETCDF}/include
 
 gfortran -o eva_build_sulfate_file eva_build_sulfate_file.f90 mo_EVA.o -I${NETCDF}/include ${FLAGS} 
