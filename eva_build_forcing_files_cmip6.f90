@@ -59,6 +59,8 @@ PROGRAM eva_build_forcing_file_cmip6
        var_ext_lw_ID      , & ! pointer to extinction variable in netCDF file
        var_ssa_lw_ID      , & ! pointer to SSA variable in netCDF file
        var_asy_lw_ID      , & ! pointer to ASY variable in netCDF file
+       var_aod_sw_ID      , & ! pointer to aod variable in netCDF file
+       var_aod_lw_ID      , & ! pointer to aod variable in netCDF file
        var_reff_ID        , & ! pointer to reff variable in netCDF file
        SO4_i0             , & ! index of time in SO4 file corresponding to first time of forcing file
        ind(12)            , & ! indices referencing years in full timeseries
@@ -89,10 +91,12 @@ PROGRAM eva_build_forcing_file_cmip6
        ext_sw(:,:,:,:)     , & ! extinction(time,z,lat,wl)
        ssa_sw(:,:,:,:)     , & ! ssa(time,z,lat,wl)
        asy_sw(:,:,:,:)     , & ! asy(time,z,lat,wl)
+       aod_sw(:,:,:)       , & ! AOD, (time, lat, wl)
        ext550_sw_vec(:)    , & ! dummy variable for call to EVA routine
        ext_sw_vec(:,:)     , & ! dummy variable for call to EVA routine
        ssa_sw_vec(:,:)     , & ! dummy variable for call to EVA routine
        asy_sw_vec(:,:)     , & ! dummy variable for call to EVA routine
+       aod_sw_dum(:)       , & ! dummy variable for call to EVA routine
        wl1_lw(:)           , & ! lower bound wavelength of longwave spectral bands
        wl2_lw(:)           , & ! upper bound wavelength of longwave spectral bands
        lambda_lw(:)        , & ! wavelengths of output
@@ -100,12 +104,14 @@ PROGRAM eva_build_forcing_file_cmip6
        ext_lw(:,:,:,:)     , & ! extinction(time,z,lat,wl)
        ssa_lw(:,:,:,:)     , & ! ssa(time,z,lat,wl)
        asy_lw(:,:,:,:)     , & ! asy(time,z,lat,wl)
+       aod_lw(:,:,:)       , & ! AOD, (time, lat, wl)
        ext550_lw_vec(:)    , & ! dummy variable for call to EVA routine
        ext_lw_vec(:,:)     , & ! dummy variable for call to EVA routine
        ssa_lw_vec(:,:)     , & ! dummy variable for call to EVA routine
-       asy_lw_vec(:,:)         ! dummy variable for call to EVA routine
-       !z(:)                    ! altitude
- REAL ::                    &
+       asy_lw_vec(:,:)     , & ! dummy variable for call to EVA routine
+       aod_lw_dum(:)        ! dummy variable for call to EVA routine       
+ 
+REAL ::                    &
        z(70)               , & ! height grid for EVA calculations
        so4_in(3)               ! sulfate triple to use in time loop
 
@@ -173,6 +179,8 @@ PROGRAM eva_build_forcing_file_cmip6
   allocate(ext_sw_vec(nz,nsw))
   allocate(ssa_sw_vec(nz,nsw))
   allocate(asy_sw_vec(nz,nsw))
+  allocate(aod_sw_dum(nsw))
+  allocate(aod_sw(nsw,nlat,12))
 
   allocate(ext550_lw(nz,nlat,12))
   allocate(ext_lw(nz,nlat,nlw,12))
@@ -185,6 +193,8 @@ PROGRAM eva_build_forcing_file_cmip6
   allocate(ext_lw_vec(nz,nlw))
   allocate(ssa_lw_vec(nz,nlw))
   allocate(asy_lw_vec(nz,nlw))
+  allocate(aod_lw_dum(nlw))
+  allocate(aod_lw(nlw,nlat,12))
 
 
   iret = nf90_inq_varid(ncid, "latitude", VarID)
@@ -248,18 +258,21 @@ PROGRAM eva_build_forcing_file_cmip6
        do j=1,nlat
          call eva_ext_reff(lat,z,lat(j),so4_in,nlat,nz,ext550_sw_vec,reff_vec)
          call eva_aop_profile(lat,z,lat(j),so4_in,lambda_sw,nsw,nlat,nz,ext_sw_vec,ssa_sw_vec,asy_sw_vec)
+         call eva_aod(lat,lat(j),so4_in,lambda_sw,nlat,nsw,nz,aod_sw_dum)
 
          ext550_sw(:,j,i)= ext550_sw_vec
          reff(:,j,i)  = reff_vec
          ext_sw(:,j,:,i) = ext_sw_vec
          ssa_sw(:,j,:,i) = ssa_sw_vec
          asy_sw(:,j,:,i) = asy_sw_vec
+         aod_sw(:,j,i) = aod_sw_dum
          call eva_aop_profile(lat,z,lat(j),so4_in,lambda_lw,nlw,nlat,nz,ext_lw_vec,ssa_lw_vec,asy_lw_vec)
+         call eva_aod(lat,lat(j),so4_in,lambda_lw,nlat,nlw,nz,aod_lw_dum)
          ext550_lw(:,j,i)= ext550_lw_vec
          ext_lw(:,j,:,i) = ext_lw_vec
          ssa_lw(:,j,:,i) = ssa_lw_vec
          asy_lw(:,j,:,i) = asy_lw_vec
-
+         aod_lw(:,j,i) = aod_lw_dum
        end do
      end do
 
@@ -328,7 +341,9 @@ PROGRAM eva_build_forcing_file_cmip6
     iret = iret + nf90_def_var(ncid, 'omega_earth'  , NF90_FLOAT, (/zID,latID,lwID,timeID/), var_ssa_lw_ID) 
     iret = iret + nf90_def_var(ncid, 'g_earth'      , NF90_FLOAT, (/zID,latID,lwID,timeID/), var_asy_lw_ID) 
     !iret = iret + nf90_def_var(ncid, 'reff'         , NF90_FLOAT, (/zID,latID,timeID/), var_reff_ID)
-    IF (iret /= 15*NF90_NOERR) STOP 'Error in creating file variables'
+    iret = iret + nf90_def_var(ncid, 'aod_sun'      , NF90_FLOAT, (/wlID,latID,timeID/),     var_aod_sw_ID)
+    iret = iret + nf90_def_var(ncid, 'aod_earth'    , NF90_FLOAT, (/lwID,latID,timeID/),     var_aod_lw_ID)
+    IF (iret /= 17*NF90_NOERR) STOP 'Error in creating file variables'
 
     iret = NF90_NOERR
     iret = iret + nf90_put_att(ncid, var_t_ID     , "long_name", "month")
@@ -361,10 +376,14 @@ PROGRAM eva_build_forcing_file_cmip6
     iret = iret + nf90_put_att(ncid, var_ssa_lw_ID   , "units"    , "unitless")
     iret = iret + nf90_put_att(ncid, var_asy_lw_ID   , "long_name", "aerosol scattering asymmtery factor")
     iret = iret + nf90_put_att(ncid, var_asy_lw_ID   , "units"    , "unitless")
+    iret = iret + nf90_put_att(ncid, var_aod_sw_ID  , "long_name", "aerosol optical depth")
+    iret = iret + nf90_put_att(ncid, var_aod_sw_ID  , "units"    , "unitless")
+    iret = iret + nf90_put_att(ncid, var_aod_lw_ID  , "long_name", "aerosol optical depth")
+    iret = iret + nf90_put_att(ncid, var_aod_lw_ID  , "units"    , "unitless")
     !iret = iret + nf90_put_att(ncid, var_reff_ID  , "long_name", "aerosol effective radius")
     !iret = iret + nf90_put_att(ncid, var_reff_ID  , "units"    , "mu m")
     iret = iret + nf90_enddef(ncid)
-    IF (iret /= 28*NF90_NOERR) STOP 'Error in creating file variable attributes'
+    IF (iret /= 32*NF90_NOERR) STOP 'Error in creating file variable attributes'
     !
     iret = NF90_NOERR  
     iret = iret + nf90_put_var(ncid, var_t_ID      , values=mons_since_1850)
@@ -382,9 +401,11 @@ PROGRAM eva_build_forcing_file_cmip6
     iret = iret + nf90_put_var(ncid, var_ext_lw_ID    , values=ext_lw)
     iret = iret + nf90_put_var(ncid, var_ssa_lw_ID    , values=ssa_lw)
     iret = iret + nf90_put_var(ncid, var_asy_lw_ID    , values=asy_lw)
+    iret = iret + nf90_put_var(ncid, var_aod_sw_ID  , values=aod_sw)
+    iret = iret + nf90_put_var(ncid, var_aod_lw_ID  , values=aod_lw)
     !iret = iret + nf90_put_var(ncid, var_reff_ID   , values=reff)
     iret = iret + nf90_close(ncid)
-    IF (iret /= 15*NF90_NOERR) STOP 'error writing data or in closing file'
+    IF (iret /= 17*NF90_NOERR) STOP 'error writing data or in closing file'
   end do
 
 END PROGRAM eva_build_forcing_file_cmip6 
