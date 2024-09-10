@@ -2,7 +2,7 @@
 ####################################################################################################
 # EVA runscript
 
-EXP=VOlMIP_cluster
+EXP=VOlMIP_cluster-ctl
 SAVEDIR="output"
 
 cd ../..
@@ -28,8 +28,8 @@ cat > eva_namelist << EOF
  forcing_output_dir     = '${SAVEDIR}',
  forcing_file_savename  = "eva_forcing_${EXP}",
  grid_filename          = "./gridfiles/CMIP6_ECHAM6_gridfile.nc",
- forcing_start_year     = 1815,
- forcing_end_year       = 1820
+ forcing_start_year     = 1809,
+ forcing_end_year       = 1859
 /
 EOF
 

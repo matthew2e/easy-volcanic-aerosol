@@ -9,7 +9,7 @@ cd ../..
 
 cat > eva_namelist << EOF
 &eva_input
- eruption_list_filename = 'VolMIP_volc-cluster-mill_volcanic_stratospheric_sulfur_injection.nc',
+ eruption_list_filename = 'VolMIP_volc-cluster-ctl_volcanic_stratospheric_sulfur_injection.nc',
  parameter_set_filename = 'EVAv1_parameter_set_piBG.nc',
  Lookuptable_filename   = 'eva_Mie_lookuptables.nc'
 /
